@@ -108,6 +108,13 @@
         </span>
         <span class="brand-text">Bihar<span class="brand-name-accent">Fast</span><small class="brand-in">.in</small></span>
       </a>
+
+      <!-- 100% Offline Ready Header Badge -->
+      <div class="header-offline-pill" id="headerOfflineBadge" title="BiharFast Studio is 100% cached &amp; works offline without internet">
+        <span class="offline-pulse-dot"></span>
+        <span class="offline-text" id="headerOfflineText">Offline Ready</span>
+      </div>
+
       <button class="mobile-menu-toggle" type="button" aria-label="Menu kholein" aria-expanded="false" aria-controls="primary-nav" data-menu-toggle>
         <span class="menu-icon" aria-hidden="true"></span>
       </button>
@@ -140,9 +147,9 @@
           <span class="badge-icon">⚡</span>
           <span id="limitBadgeText">Under 50 KB</span>
         </span>
-        <span class="status-badge badge-offline">
+        <span class="status-badge badge-offline" id="statusBadgeOffline">
           <span class="badge-icon">🔒</span>
-          <span>100% Offline - No Upload</span>
+          <span id="statusBadgeOfflineText">100% Offline - No Upload</span>
         </span>
       </div>
     </section>
@@ -898,5 +905,44 @@
 
   <!-- BiharFast Studio Core (Connected to kb-engine.js) -->
   <script type="module" src="../assets/js/studio-core.js"></script>
+
+  <!-- Service Worker Registration for 100% Offline Support -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('../sw.js', { scope: '../' })
+          .then((reg) => {
+            console.log('[BiharFast Studio] Offline Service Worker registered:', reg.scope);
+            const badge = document.getElementById('headerOfflineBadge');
+            const text = document.getElementById('headerOfflineText');
+            if (badge && text) {
+              badge.classList.remove('is-offline');
+              text.textContent = 'Offline Ready';
+              badge.title = 'BiharFast Studio is 100% cached & works offline without internet';
+            }
+          })
+          .catch((err) => console.warn('[BiharFast Studio] SW registration failed:', err));
+      });
+
+      // Live online/offline status detection
+      const updateOnlineStatus = () => {
+        const badge = document.getElementById('headerOfflineBadge');
+        const text = document.getElementById('headerOfflineText');
+        const heroBadge = document.getElementById('statusBadgeOfflineText');
+        if (!navigator.onLine) {
+          if (badge) badge.classList.add('is-offline');
+          if (text) text.textContent = 'Working Offline';
+          if (heroBadge) heroBadge.textContent = 'Working Offline (No Internet)';
+        } else {
+          if (badge) badge.classList.remove('is-offline');
+          if (text) text.textContent = 'Offline Ready';
+          if (heroBadge) heroBadge.textContent = '100% Offline - No Upload';
+        }
+      };
+
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+    }
+  </script>
 </body>
 </html>
