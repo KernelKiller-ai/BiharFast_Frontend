@@ -48,7 +48,7 @@
       </button>
       <nav class="primary-nav" id="primary-nav" aria-label="Main navigation" data-primary-nav>
         <a href="index.html">Home</a>
-        <a href="tools/studio.html" style="color: var(--cyan); font-weight: 750;">Studio (Tools)</a>
+        <a href="tools/studio.html" style="color: var(--cyan); font-weight: 750;">Studio (Tools) <span style="font-size: 0.68rem; background: rgba(52,211,153,0.18); color: var(--green); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(52,211,153,0.35); margin-left: 4px;">New</span></a>
         <a href="index.html#mission">Mission</a>
         <a class="nav-cta" href="index.html#idea-form">Idea Box <span aria-hidden="true">↗</span></a>
       </nav>
@@ -109,6 +109,73 @@
         <div class="trust-item"><span class="trust-icon" aria-hidden="true">✦</span><span>100% Free & Fast</span></div>
         <div class="trust-item"><span class="trust-icon" aria-hidden="true">↗</span><span>Mobile-First Design</span></div>
         <div class="trust-item"><span class="trust-icon" aria-hidden="true">38</span><span>Built For All 38 Districts</span></div>
+      </div>
+    </section>
+
+    <!-- BiharFast Studio Feature Spotlight Card -->
+    <section class="studio-spotlight-section page-width" aria-labelledby="studio-spotlight-title">
+      <div class="studio-feature-card">
+        <div class="studio-feature-content">
+          <div class="feature-badge">
+            <span class="feature-badge-dot"></span>
+            <span>NEW UTILITY · 100% OFFLINE READY</span>
+          </div>
+          <h2 id="studio-spotlight-title">
+            BiharFast <span class="text-gradient">Photo &amp; Doc Studio</span>
+          </h2>
+          <p class="feature-desc">
+            BPSC, CSBC Bihar Police, PAN Card (213×213) aur Bihar RTPS ke liye photo, signature aur PDF ko bina quality khoye perfect size me banayein. Zero server upload, 100% client-side privacy aur Cyber Cafe friendly.
+          </p>
+
+          <div class="feature-pills-list">
+            <span class="feature-pill">⚡ Exact KB Resizer (20–50 KB)</span>
+            <span class="feature-pill">✍ Name &amp; Date (DOPO) Generator</span>
+            <span class="feature-pill">📄 Multi-Page RTPS PDF (&lt;200 KB)</span>
+            <span class="feature-pill">🖼️ PDF to JPG Extractor (PDF.js)</span>
+            <span class="feature-pill">✨ 1-Click Signature Paper Cleaner</span>
+            <span class="feature-pill">🔒 Works Offline (No Internet)</span>
+          </div>
+
+          <div class="feature-actions">
+            <a href="tools/studio.html" class="button button-primary spotlight-cta">
+              Open Studio Tool <span aria-hidden="true">→</span>
+            </a>
+            <a href="tools/studio.html#faq" class="button button-secondary">
+              Sarkari Size Guide
+            </a>
+          </div>
+        </div>
+
+        <div class="studio-feature-preview">
+          <div class="preview-mockup">
+            <div class="mockup-header">
+              <span class="mockup-dot red"></span>
+              <span class="mockup-dot yellow"></span>
+              <span class="mockup-dot green"></span>
+              <span class="mockup-title">biharfast.in/tools/studio.html</span>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-canvas-box">
+                <div class="mockup-photo-preview">
+                  <div class="mockup-photo-avatar"></div>
+                  <div class="mockup-photo-strip">
+                    <span class="mockup-name">RAHUL KUMAR</span>
+                    <span class="mockup-date">DOP: 19-11-2026</span>
+                  </div>
+                </div>
+                <div class="mockup-meta-pill">
+                  <span class="meta-label">BPSC Photo</span>
+                  <span class="meta-val">34.2 KB · 200×230</span>
+                </div>
+              </div>
+              <div class="mockup-chips-row">
+                <span class="mockup-chip active">BPSC 20-50KB</span>
+                <span class="mockup-chip">PAN 213×213</span>
+                <span class="mockup-chip">RTPS &lt;200KB</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -201,5 +268,16 @@
       <p class="independent-note"><strong>Independent platform</strong> · BiharFast kisi government body se affiliated nahi hai.</p>
     </div>
   </footer>
+
+  <!-- Service Worker Registration for 100% Offline Support -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[BiharFast] Offline Service Worker registered:', reg.scope))
+          .catch((err) => console.warn('[BiharFast] Service Worker registration failed:', err));
+      });
+    }
+  </script>
 </body>
 </html>

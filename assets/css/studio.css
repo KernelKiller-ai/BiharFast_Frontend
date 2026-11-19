@@ -117,6 +117,67 @@
   box-shadow: 0 2px 12px rgb(167 139 250 / 12%);
 }
 
+/* Header Offline Ready Badge */
+.header-offline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgb(16 185 129 / 18%), rgb(52 211 153 / 10%));
+  border: 1px solid rgb(52 211 153 / 35%);
+  color: #6ee7b7;
+  font-size: 0.74rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 14px rgb(52 211 153 / 15%);
+  user-select: none;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.header-offline-pill .offline-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse-dot 1.8s infinite ease-in-out;
+}
+
+.header-offline-pill.is-offline {
+  background: linear-gradient(135deg, rgb(56 189 248 / 20%), rgb(14 165 233 / 10%));
+  border-color: rgb(56 189 248 / 40%);
+  color: #7dd3fc;
+  box-shadow: 0 0 14px rgb(56 189 248 / 20%);
+}
+
+.header-offline-pill.is-offline .offline-pulse-dot {
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+@media (max-width: 800px) {
+  .header-offline-pill {
+    margin-left: auto;
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 440px) {
+  .header-offline-pill {
+    padding: 3px 8px;
+    font-size: 0.65rem;
+    gap: 5px;
+  }
+  .header-offline-pill .offline-pulse-dot {
+    width: 6px;
+    height: 6px;
+  }
+}
+
 /* App Main Container (2-Column Photoshop Workspace) */
 .studio-workspace-container {
   width: min(1360px, calc(100% - 32px));
