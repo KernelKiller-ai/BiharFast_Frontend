@@ -6,14 +6,13 @@
  * work 100% offline without internet connection.
  */
 
-const CACHE_NAME = 'biharfast-studio-v2';
+const CACHE_NAME = 'biharfast-studio-v3';
 
 // Core assets to pre-cache on Service Worker installation
 const ASSETS = [
   './',
   './index.html',
   './tools/studio.html',
-  './tools/studio',
   './assets/css/style.css',
   './assets/css/studio.css',
   './assets/js/main.js',
@@ -64,52 +63,51 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event: Cache-First Strategy with Background Cache Updates
-// Only intercept same-origin GET requests; wrap in a fallback so respondWith() NEVER causes ERR_FAILED
+// Fetch Event: Cache-First Strategy for same-origin assets.
 self.addEventListener('fetch', (event) => {
-  // Only intercept same-origin GET requests
+  if (event.request.mode === 'navigate') return;
   if (event.request.method !== 'GET') return;
 
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
 
-  event.respondWith(
-    caches.match(event.request, { ignoreSearch: true })
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          // Return instantly from cache (Cache-First)
-          return cachedResponse;
-        }
+  const isAsset = ['style', 'script', 'image'].includes(event.request.destination) ||
+    /\.(?:css|js|png|jpe?g|gif|webp|svg|ico)$/i.test(requestUrl.pathname);
+  if (!isAsset) return;
 
-        // If not in cache, fetch from network and dynamically cache valid response
-        return fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return networkResponse;
-        });
-      })
-      .catch(() => {
-        // Fallback to direct network fetch if cache matching fails
-        return fetch(event.request);
-      })
-      .catch(() => {
-        // If both cache and network fail (completely offline)
-        if (event.request.mode === 'navigate') {
-          if (requestUrl.pathname.includes('/tools/') || requestUrl.pathname.includes('studio')) {
-            return caches.match('/tools/studio.html')
-              .then((res) => res || caches.match('./tools/studio.html'))
-              .then((res) => res || caches.match('/tools/studio'));
-          }
-          return caches.match('/index.html')
-            .then((res) => res || caches.match('./index.html'))
-            .then((res) => res || caches.match('/'));
-        }
-        // Fallback Response instead of rejecting to prevent Chrome ERR_FAILED
-        return new Response('Offline', { status: 503, statusText: 'Offline' });
-      })
-  );
+  event.respondWith((async () => {
+    let cachedResponse;
+    try {
+      cachedResponse = await caches.match(event.request, { ignoreSearch: true });
+    } catch (error) {
+      console.warn(`[BiharFast SW] Asset cache lookup failed: ${event.request.url}`, error);
+    }
+    if (cachedResponse && !cachedResponse.redirected) return cachedResponse;
+
+    let response;
+    try {
+      response = await fetch(event.request);
+      if (response.redirected) response = await fetch(response.url);
+    } catch (error) {
+      console.warn(`[BiharFast SW] Asset request failed: ${event.request.url}`, error);
+      return new Response('Offline', { status: 503, statusText: 'Offline' });
+    }
+
+    if (response.redirected) {
+      return new Response('Asset redirect rejected', {
+        status: 502,
+        statusText: 'Bad Gateway'
+      });
+    }
+
+    if (response.status === 200) {
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(event.request, response.clone());
+      } catch (error) {
+        console.warn(`[BiharFast SW] Asset cache write failed: ${event.request.url}`, error);
+      }
+    }
+    return response;
+  })());
 });
