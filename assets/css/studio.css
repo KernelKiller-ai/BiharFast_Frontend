@@ -57,6 +57,66 @@
   margin: 0 auto;
 }
 
+/* Mobile-First Hindi / Hinglish Status Badges Strip */
+.studio-status-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.status-badge .badge-icon {
+  font-size: 0.92rem;
+  line-height: 1;
+}
+
+.status-badge .badge-dot-green {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: pulse-dot 1.8s infinite ease-in-out;
+}
+
+.badge-bpsc {
+  background: linear-gradient(135deg, rgb(16 185 129 / 16%), rgb(52 211 153 / 8%));
+  border: 1px solid rgb(52 211 153 / 35%);
+  color: #6ee7b7;
+  box-shadow: 0 2px 12px rgb(16 185 129 / 12%);
+}
+
+.badge-limit {
+  background: linear-gradient(135deg, rgb(56 189 248 / 16%), rgb(14 165 233 / 8%));
+  border: 1px solid rgb(56 189 248 / 35%);
+  color: #7dd3fc;
+  box-shadow: 0 2px 12px rgb(56 189 248 / 12%);
+}
+
+.badge-offline {
+  background: linear-gradient(135deg, rgb(167 139 250 / 16%), rgb(139 92 246 / 8%));
+  border: 1px solid rgb(167 139 250 / 35%);
+  color: #c4b5fd;
+  box-shadow: 0 2px 12px rgb(167 139 250 / 12%);
+}
+
 /* App Main Container (2-Column Photoshop Workspace) */
 .studio-workspace-container {
   width: min(1360px, calc(100% - 32px));
@@ -1027,7 +1087,7 @@
 
 @media (max-width: 640px) {
   .studio-workspace-container {
-    width: min(100% - 24px, 560px);
+    width: min(100% - 20px, 560px);
   }
 
   .workspace-card {
@@ -1035,8 +1095,101 @@
     min-height: auto;
   }
 
+  /* Sticky Compact Canvas Preview when photo is loaded */
+  .workspace-card.has-file {
+    position: sticky;
+    top: 68px;
+    z-index: 25;
+    padding: 10px 12px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+    background: rgb(9 13 22 / 96%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgb(56 189 248 / 30%);
+    box-shadow: 0 12px 36px rgb(0 0 0 / 80%);
+  }
+
+  .workspace-card.has-file .workspace-topbar {
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    gap: 6px;
+  }
+
+  .workspace-card.has-file .file-info-tags {
+    gap: 4px;
+  }
+
+  .workspace-card.has-file .info-chip {
+    padding: 2px 6px;
+    font-size: 0.68rem;
+  }
+
+  .workspace-card.has-file .viewport-controls {
+    gap: 4px;
+  }
+
+  .workspace-card.has-file .viewport-controls .icon-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 0.72rem;
+    border-radius: 6px;
+  }
+
+  .workspace-card.has-file #zoomLevelTag {
+    display: none;
+  }
+
+  .workspace-card.has-file .canvas-viewport {
+    min-height: 140px;
+    max-height: 185px;
+    padding: 6px;
+    border-radius: 10px;
+  }
+
+  .workspace-card.has-file #studioCanvas {
+    max-height: 170px;
+    object-fit: contain;
+  }
+
+  .workspace-card.has-file .workspace-bottombar {
+    padding-top: 8px;
+    margin-top: 8px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .workspace-card.has-file .output-meta {
+    font-size: 0.76rem;
+    gap: 6px;
+  }
+
+  .workspace-card.has-file .output-size-pill {
+    padding: 2px 8px;
+    font-size: 0.76rem;
+  }
+
+  .workspace-card.has-file #targetStatusText {
+    display: none;
+  }
+
+  .workspace-card.has-file .bottom-action-buttons {
+    width: auto;
+    display: flex;
+    gap: 6px;
+  }
+
+  .workspace-card.has-file .bottom-action-buttons .btn-primary,
+  .workspace-card.has-file .bottom-action-buttons .btn-secondary {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+    flex: none;
+  }
+
   .canvas-viewport {
-    min-height: 320px;
+    min-height: 280px;
     padding: 16px;
   }
 
@@ -1102,5 +1255,90 @@
 
   .trust-card, .guide-article {
     padding: 20px;
+  }
+}
+
+/* Specific Optimizations for 360px - 430px Mobile Devices */
+@media (max-width: 440px) {
+  .studio-workspace-container {
+    width: calc(100% - 14px);
+    margin-bottom: 40px;
+  }
+
+  .studio-hero h1 {
+    font-size: 1.85rem;
+  }
+
+  .studio-status-strip {
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .status-badge {
+    font-size: 0.72rem;
+    padding: 4px 10px;
+  }
+
+  .status-badge .badge-icon {
+    font-size: 0.82rem;
+  }
+
+  .tab-btn {
+    padding: 8px 1px;
+    font-size: 0.65rem;
+  }
+
+  .tab-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .workspace-card.has-file {
+    padding: 8px 10px;
+    top: 65px;
+  }
+
+  .workspace-card.has-file .canvas-viewport {
+    min-height: 125px;
+    max-height: 160px;
+    padding: 4px;
+  }
+
+  .workspace-card.has-file #studioCanvas {
+    max-height: 148px;
+  }
+
+  .workspace-card.has-file .file-info-tags {
+    font-size: 0.65rem;
+  }
+
+  .tab-content {
+    padding: 14px 12px;
+  }
+
+  /* Thumb-friendly range sliders for precise mobile touches */
+  .custom-range {
+    height: 8px;
+  }
+
+  .custom-range::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+    box-shadow: 0 0 12px rgb(56 189 248 / 65%);
+  }
+
+  .custom-range::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .preset-chip {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .aspect-btn {
+    padding: 7px 6px;
+    font-size: 0.72rem;
   }
 }
