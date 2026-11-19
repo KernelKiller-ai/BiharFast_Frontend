@@ -13,11 +13,31 @@
  *   3. PAN Card NSDL/UTIITSL Photo (213x213px, <30 KB)
  *   4. RTPS Bihar / Voter ID (<50 KB)
  *   5. Bihar Police (CSBC) Photo with DOP
+ * - Live Name & Date generator appending crisp white strip (18% height)
+ *   with centered bold black text for Candidate Name (Auto-UPPERCASE)
+ *   and Date of Photo (DD-MM-YYYY)
+ * - Canvas transforms: Rotate 90°, Flip Horizontal (Mirror)
+ * - Aspect-Ratio Crop presets: Free, Passport 3.5:4.5, Square 1:1, Signature 3:1
+ * - Brightness & Contrast sliders with real-time feedback
+ * - 1-Click Signature Paper Cleaner filter that converts off-white / shadowed
+ *   mobile photos of signatures into crisp dark ink on pure white (#ffffff) background
+ * - Pipes canvas directly through kb-engine.js for 1-click 20-50 KB ready JPG download
  * - Instant client-side download without server upload
- * - Name & Date strip adder + Touch-Up filters + RTPS PDF generator
  */
 
 import { compressToExactKB, increaseToMinKB } from './kb-engine.js';
+
+/**
+ * Returns today's date formatted as DD-MM-YYYY
+ * @returns {string} e.g. "19-11-2026"
+ */
+export function getTodayDateFormatted() {
+  const now = new Date();
+  const d = String(now.getDate()).padStart(2, '0');
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const y = now.getFullYear();
+  return `${d}-${m}-${y}`;
+}
 
 // Predefined 1-Click Exam & Sarkari Portal Specifications
 export const EXAM_PRESETS = {
@@ -29,6 +49,7 @@ export const EXAM_PRESETS = {
     maxKB: 50,
     mimeType: 'image/jpeg',
     enableNameDate: false,
+    cropRatio: '3.5:4.5',
     filenamePrefix: 'bpsc_bssc_rrb_photo_200x230'
   },
   'bpsc-sign': {
@@ -39,6 +60,7 @@ export const EXAM_PRESETS = {
     maxKB: 20,
     mimeType: 'image/jpeg',
     enableNameDate: false,
+    cropRatio: '3:1',
     filenamePrefix: 'bpsc_rrb_sign_140x60'
   },
   'pan-photo': {
@@ -49,6 +71,7 @@ export const EXAM_PRESETS = {
     maxKB: 30,
     mimeType: 'image/jpeg',
     enableNameDate: false,
+    cropRatio: '1:1',
     filenamePrefix: 'pan_card_photo_213x213'
   },
   'pan-sign': {
@@ -59,6 +82,7 @@ export const EXAM_PRESETS = {
     maxKB: 20,
     mimeType: 'image/jpeg',
     enableNameDate: false,
+    cropRatio: '2:1',
     filenamePrefix: 'pan_card_sign_400x200'
   },
   'rtps-voter': {
@@ -69,6 +93,7 @@ export const EXAM_PRESETS = {
     maxKB: 50,
     mimeType: 'image/jpeg',
     enableNameDate: false,
+    cropRatio: '3.5:4.5',
     filenamePrefix: 'rtps_voter_doc'
   },
   'csbc-photo': {
@@ -79,6 +104,7 @@ export const EXAM_PRESETS = {
     maxKB: 50,
     mimeType: 'image/jpeg',
     enableNameDate: true,
+    cropRatio: '3.5:4.5',
     filenamePrefix: 'csbc_bihar_police_dop'
   },
   'custom': {
@@ -104,8 +130,10 @@ export const state = {
   aspectRatioLocked: true,
   outputMime: 'image/jpeg',
 
-  // Viewport
+  // Transforms & Aspect Ratio Crop
   rotation: 0,
+  flipH: false,
+  cropRatio: 'free', // 'free', '3.5:4.5', '1:1', '3:1'
   zoom: 1,
 
   // Processed Output
@@ -113,12 +141,13 @@ export const state = {
   lastBlobSize: 0,
   isProcessing: false,
 
-  // Name & Date (DOPO)
+  // Name & Date (DOPO) Generator
   nameDateEnabled: false,
   candidateName: 'ANURAG KUMAR',
-  photoDate: 'DOP: 15/11/2026',
+  photoDate: getTodayDateFormatted(),
   stripBg: '#ffffff',
-  stripHeightPercent: 20,
+  stripMode: 'append', // 'append' (18% below photo) or 'overlay'
+  stripHeightPercent: 18, // 18% of image height
   nameFontSize: 22,
   nameUppercase: true,
 
@@ -126,6 +155,7 @@ export const state = {
   brightness: 0,
   contrast: 0,
   grayscale: false,
+  signatureCleanerActive: false, // 1-click signature paper cleaner
 
   // PDF
   pdfTargetKb: 195,
@@ -138,11 +168,18 @@ let elements = {};
 
 function cacheElements() {
   elements = {
-    // Dropzone & Viewport
+    // Dropzone, Workspace Card & Viewport
+    workspaceCard: document.getElementById('workspaceCard'),
     dropzone: document.getElementById('dropzone'),
     fileInput: document.getElementById('fileInput'),
     canvasWrapper: document.getElementById('canvasWrapper'),
     canvas: document.getElementById('studioCanvas'),
+    
+    // Status Badges
+    portalBadge: document.getElementById('portalBadge'),
+    portalBadgeText: document.getElementById('portalBadgeText'),
+    limitBadge: document.getElementById('limitBadge'),
+    limitBadgeText: document.getElementById('limitBadgeText'),
     
     // Readouts (Before / After)
     fileNameTag: document.getElementById('fileNameTag'),
@@ -156,6 +193,7 @@ function cacheElements() {
     zoomInBtn: document.getElementById('zoomInBtn'),
     zoomOutBtn: document.getElementById('zoomOutBtn'),
     rotateBtn: document.getElementById('rotateBtn'),
+    flipHBtn: document.getElementById('flipHBtn'),
     resetZoomBtn: document.getElementById('resetZoomBtn'),
     clearBtn: document.getElementById('clearBtn'),
     downloadBtn: document.getElementById('downloadBtn'),
@@ -175,20 +213,24 @@ function cacheElements() {
     enableNameDateToggle: document.getElementById('enableNameDateToggle'),
     candidateNameInput: document.getElementById('candidateNameInput'),
     photoDateInput: document.getElementById('photoDateInput'),
-    stripBgColor: document.getElementById('stripBgColor'),
+    todayDateBtn: document.getElementById('todayDateBtn'),
+    stripModeSelect: document.getElementById('stripModeSelect'),
     stripHeightSlider: document.getElementById('stripHeightSlider'),
     stripHeightDisplay: document.getElementById('stripHeightDisplay'),
-    nameFontSizeSlider: document.getElementById('nameFontSizeSlider'),
     nameUppercaseToggle: document.getElementById('nameUppercaseToggle'),
+    downloadNameDatePhotoBtn: document.getElementById('downloadNameDatePhotoBtn'),
 
     // Touch-Up Controls
+    cleanSignatureBtn: document.getElementById('cleanSignatureBtn'),
+    autoEnhanceBtn: document.getElementById('autoEnhanceBtn'),
+    rotateTabBtn: document.getElementById('rotateTabBtn'),
+    flipHTabBtn: document.getElementById('flipHTabBtn'),
     brightnessSlider: document.getElementById('brightnessSlider'),
     brightnessDisplay: document.getElementById('brightnessDisplay'),
     contrastSlider: document.getElementById('contrastSlider'),
     contrastDisplay: document.getElementById('contrastDisplay'),
     grayscaleToggle: document.getElementById('grayscaleToggle'),
-    cleanSignatureBtn: document.getElementById('cleanSignatureBtn'),
-    autoEnhanceBtn: document.getElementById('autoEnhanceBtn'),
+    cropPresetsGrid: document.getElementById('cropPresetsGrid'),
     resetFiltersBtn: document.getElementById('resetFiltersBtn'),
 
     // PDF Controls
@@ -224,6 +266,9 @@ export function handleFile(file) {
 
       // Reset view transforms
       state.rotation = 0;
+      state.flipH = false;
+      state.cropRatio = 'free';
+      state.signatureCleanerActive = false;
       state.zoom = 1;
 
       // If active preset has fixed dimensions, apply them; otherwise use image dimensions
@@ -243,9 +288,10 @@ export function handleFile(file) {
       // Update "Before" readout
       updateBeforeReadout();
 
-      // Switch view to canvas
+      // Switch view to canvas & dock sticky preview on mobile
       if (elements.dropzone) elements.dropzone.style.display = 'none';
       if (elements.canvasWrapper) elements.canvasWrapper.style.display = 'block';
+      if (elements.workspaceCard) elements.workspaceCard.classList.add('has-file');
 
       // Enable action buttons
       enableActionButtons(true);
@@ -267,6 +313,7 @@ function handlePdfFile(file) {
   }
   if (elements.dropzone) elements.dropzone.style.display = 'none';
   if (elements.canvasWrapper) elements.canvasWrapper.style.display = 'block';
+  if (elements.workspaceCard) elements.workspaceCard.classList.add('has-file');
 
   // Render placeholder on canvas
   const canvas = elements.canvas;
@@ -307,7 +354,8 @@ function updateBeforeReadout() {
 }
 
 /**
- * Draws the current image onto the canvas with rotation, filters, and optional Name & Date strip
+ * Draws the current image onto the canvas with aspect ratio cropping, rotation,
+ * horizontal flip, touch-up filters, and crisp white Name & Date strip
  */
 export function renderCanvas() {
   if (!state.originalImage || !elements.canvas) return;
@@ -320,8 +368,18 @@ export function renderCanvas() {
 
   // Account for 90° or 270° rotation
   const isRotated = state.rotation % 180 !== 0;
-  const renderW = isRotated ? baseH : baseW;
-  const renderH = isRotated ? baseW : baseH;
+  const photoW = isRotated ? baseH : baseW;
+  const photoH = isRotated ? baseW : baseH;
+
+  // Determine strip height if Name & Date is enabled (default 18% of photo height)
+  const isNameDateActive = state.nameDateEnabled && (state.candidateName.trim() || state.photoDate.trim());
+  const stripH = isNameDateActive ? Math.max(24, Math.round(photoH * (state.stripHeightPercent / 100))) : 0;
+
+  // Total canvas height depends on strip placement mode:
+  // 'append' expands the canvas height by stripH (preserving 100% of face); 'overlay' stays within original frame
+  const isAppendMode = state.stripMode === 'append';
+  const renderW = photoW;
+  const renderH = isNameDateActive && isAppendMode ? (photoH + stripH) : photoH;
 
   canvas.width = renderW;
   canvas.height = renderH;
@@ -329,18 +387,63 @@ export function renderCanvas() {
   ctx.save();
   ctx.clearRect(0, 0, renderW, renderH);
 
-  // Apply Rotation
-  ctx.translate(renderW / 2, renderH / 2);
+  // Compute source crop coordinates based on cropRatio
+  const origW = state.originalWidth;
+  const origH = state.originalHeight;
+  let sx = 0;
+  let sy = 0;
+  let sw = origW;
+  let sh = origH;
+
+  if (state.cropRatio === '1:1') {
+    const size = Math.min(origW, origH);
+    sw = size;
+    sh = size;
+    sx = Math.round((origW - size) / 2);
+    sy = Math.round((origH - size) / 2);
+  } else if (state.cropRatio === '3.5:4.5') {
+    const r = 3.5 / 4.5;
+    if (origW / origH > r) {
+      sh = origH;
+      sw = Math.round(origH * r);
+    } else {
+      sw = origW;
+      sh = Math.round(origW / r);
+    }
+    sx = Math.round((origW - sw) / 2);
+    sy = Math.round((origH - sh) / 2);
+  } else if (state.cropRatio === '3:1') {
+    const r = 3 / 1;
+    if (origW / origH > r) {
+      sh = origH;
+      sw = Math.round(origH * r);
+    } else {
+      sw = origW;
+      sh = Math.round(origW / r);
+    }
+    sx = Math.round((origW - sw) / 2);
+    sy = Math.round((origH - sh) / 2);
+  }
+
+  // Draw the photo with rotation and optional horizontal mirror flip
+  ctx.save();
+  ctx.translate(photoW / 2, photoH / 2);
   ctx.rotate((state.rotation * Math.PI) / 180);
-  ctx.drawImage(state.originalImage, -baseW / 2, -baseH / 2, baseW, baseH);
+
+  if (state.flipH) {
+    ctx.scale(-1, 1);
+  }
+
+  ctx.drawImage(state.originalImage, sx, sy, sw, sh, -baseW / 2, -baseH / 2, baseW, baseH);
   ctx.restore();
 
-  // Apply Pixel Filters (Brightness, Contrast, Grayscale)
-  applyFilters(ctx, renderW, renderH);
+  // Apply Pixel Filters (Brightness, Contrast, Grayscale, or Signature Paper Cleaner)
+  applyFilters(ctx, photoW, photoH);
 
-  // Render Name & Date strip if enabled
-  if (state.nameDateEnabled && (state.candidateName.trim() || state.photoDate.trim())) {
-    drawNameDateStrip(ctx, renderW, renderH);
+  // Render Crisp White Strip with Centered Bold Black Text (Line 1: Name, Line 2: Date)
+  if (isNameDateActive && stripH > 0) {
+    const startY = isAppendMode ? photoH : (photoH - stripH);
+    drawCrispWhiteStrip(ctx, renderW, startY, stripH);
   }
 
   // Update viewport scale transform
@@ -353,17 +456,26 @@ export function renderCanvas() {
 }
 
 /**
- * Applies Brightness, Contrast & Grayscale filters directly to pixel buffer
+ * Applies Brightness, Contrast, Grayscale, or Signature Paper Cleaner filter
  */
 function applyFilters(ctx, width, height) {
   const b = state.brightness;
   const c = state.contrast;
   const gray = state.grayscale;
+  const cleanSig = state.signatureCleanerActive;
 
-  if (b === 0 && c === 0 && !gray) return;
+  if (b === 0 && c === 0 && !gray && !cleanSig) return;
 
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
+
+  // If 1-Click Signature Paper Cleaner is active: apply adaptive whitening & ink darkening
+  if (cleanSig) {
+    applySignaturePaperCleanerToData(data);
+    ctx.putImageData(imgData, 0, 0);
+    return;
+  }
+
   const factor = (259 * (c + 255)) / (255 * (259 - c));
 
   for (let i = 0; i < data.length; i += 4) {
@@ -389,46 +501,88 @@ function applyFilters(ctx, width, height) {
 }
 
 /**
- * Draws Name & Date (DOPO) strip at the bottom of the photo
+ * 1-Click Signature Paper Cleaner Algorithm
+ * Analyzes phone photos of signatures on paper, removes shadows, yellow/gray tint,
+ * and sets paper background to pure #ffffff while making ink deep, crisp, and high-contrast.
  */
-function drawNameDateStrip(ctx, width, height) {
-  const stripH = Math.round((height * state.stripHeightPercent) / 100);
-  const startY = height - stripH;
-
-  // Background
-  if (state.stripBg !== 'transparent') {
-    ctx.fillStyle = state.stripBg;
-    ctx.fillRect(0, startY, width, stripH);
+function applySignaturePaperCleanerToData(data) {
+  // Pass 1: Sample luminance to determine background paper brightness
+  let totalLuma = 0;
+  let sampleCount = 0;
+  for (let i = 0; i < data.length; i += 16) {
+    const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    totalLuma += luma;
+    sampleCount++;
   }
+  const avgLuma = sampleCount > 0 ? (totalLuma / sampleCount) : 180;
+  // Adaptive threshold: accounts for dark room shadows vs bright outdoor lighting
+  const threshold = Math.max(120, Math.min(210, avgLuma * 0.84));
 
-  // Border separator
-  ctx.strokeStyle = state.stripBg === '#ffffff' ? '#cbd5e1' : '#334155';
-  ctx.lineWidth = Math.max(1, Math.round(width / 300));
+  // Pass 2: Clean background to 255 white, deepen ink to crisp dark ink
+  for (let i = 0; i < data.length; i += 4) {
+    const luma = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+
+    if (luma >= threshold) {
+      // Pure white paper background (#ffffff)
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+    } else {
+      // Ink stroke: non-linear curve to avoid harsh jagged pixel edges
+      const normalized = luma / threshold;
+      const inkVal = Math.min(255, Math.round(Math.pow(normalized, 1.5) * 40));
+      data[i] = inkVal;
+      data[i + 1] = inkVal;
+      data[i + 2] = inkVal;
+    }
+  }
+}
+
+/**
+ * Renders a crisp white strip (18% of photo height) at the bottom of the photo
+ * with centered black bold text for Candidate Name (Line 1) and Date of Photo (Line 2).
+ */
+function drawCrispWhiteStrip(ctx, width, startY, stripH) {
+  // 1. Crisp white background (#ffffff)
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, startY, width, stripH);
+
+  // 2. Subtle top border line to separate photo from the strip
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = Math.max(1, Math.round(width / 320));
   ctx.beginPath();
   ctx.moveTo(0, startY);
   ctx.lineTo(width, startY);
   ctx.stroke();
 
-  // Text
-  ctx.fillStyle = state.stripBg === '#ffffff' ? '#000000' : '#ffffff';
+  // 3. Format texts
+  let line1 = state.candidateName.trim();
+  if (state.nameUppercase) {
+    line1 = line1.toUpperCase();
+  }
+  const line2 = state.photoDate.trim();
+
+  // 4. Calculate optimal bold font size for centered black text
+  const maxLen = Math.max(line1.length, line2.length, 10);
+  const fontByW = Math.floor((width * 0.88) / (maxLen * 0.56));
+  const fontByH = Math.floor(stripH * 0.34);
+  const fontSize = Math.max(10, Math.min(fontByW, fontByH, 24));
+
+  ctx.fillStyle = '#000000'; // Pure centered black text
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  ctx.font = `bold ${fontSize}px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
 
-  const baseFontPx = Math.max(12, Math.round((width / 350) * state.nameFontSize));
-  ctx.font = `bold ${baseFontPx}px Inter, -apple-system, sans-serif`;
-
-  let name = state.candidateName;
-  if (state.nameUppercase) name = name.toUpperCase();
-  const date = state.photoDate;
-
-  if (name && date) {
-    ctx.fillText(name, width / 2, startY + stripH * 0.35);
-    ctx.font = `600 ${Math.round(baseFontPx * 0.85)}px Inter, -apple-system, sans-serif`;
-    ctx.fillText(date, width / 2, startY + stripH * 0.72);
-  } else if (name) {
-    ctx.fillText(name, width / 2, startY + stripH / 2);
-  } else if (date) {
-    ctx.fillText(date, width / 2, startY + stripH / 2);
+  if (line1 && line2) {
+    // Line 1: Candidate Name (centered, black bold)
+    ctx.fillText(line1, width / 2, startY + stripH * 0.33);
+    // Line 2: Date of Photo DD-MM-YYYY (centered, black bold)
+    ctx.font = `bold ${Math.max(9, Math.round(fontSize * 0.92))}px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillText(line2, width / 2, startY + stripH * 0.72);
+  } else if (line1) {
+    ctx.fillText(line1, width / 2, startY + stripH / 2);
+  } else if (line2) {
+    ctx.fillText(line2, width / 2, startY + stripH / 2);
   }
 }
 
@@ -539,6 +693,15 @@ export function applyPreset(presetKey) {
     }
   }
 
+  if (preset.cropRatio) {
+    state.cropRatio = preset.cropRatio;
+    if (elements.cropPresetsGrid) {
+      elements.cropPresetsGrid.querySelectorAll('.aspect-btn').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-ratio') === preset.cropRatio);
+      });
+    }
+  }
+
   if (preset.mimeType) {
     state.outputMime = preset.mimeType;
     if (elements.formatSelect) elements.formatSelect.value = preset.mimeType;
@@ -550,6 +713,109 @@ export function applyPreset(presetKey) {
 function updateKbRangeDisplay() {
   if (elements.targetKbRangeDisplay) {
     elements.targetKbRangeDisplay.textContent = `${state.minKB} KB - ${state.maxKB} KB`;
+  }
+  updateStatusBadges();
+}
+
+/**
+ * Updates top status badges dynamically (Hinglish/Hindi friendly)
+ */
+export function updateStatusBadges() {
+  if (elements.limitBadgeText) {
+    elements.limitBadgeText.textContent = `Under ${state.maxKB} KB`;
+  }
+  if (elements.portalBadgeText) {
+    const key = state.activePresetKey || '';
+    if (key.startsWith('bpsc')) {
+      elements.portalBadgeText.textContent = 'Ready for BPSC / BSSC';
+    } else if (key.startsWith('pan')) {
+      elements.portalBadgeText.textContent = 'Ready for PAN Card';
+    } else if (key.startsWith('csbc')) {
+      elements.portalBadgeText.textContent = 'Ready for CSBC Police';
+    } else if (key.startsWith('rtps')) {
+      elements.portalBadgeText.textContent = 'Ready for RTPS Bihar';
+    } else {
+      elements.portalBadgeText.textContent = 'Ready for Exam Portal';
+    }
+  }
+}
+
+/**
+ * Dedicated 1-Click Generator & Download for Name & Date Photo (Strict 20-50 KB JPG)
+ * Pipes canvas directly through kb-engine.js and triggers ready-to-upload download
+ */
+export async function downloadNameDateJpg() {
+  if (!elements.canvas || !state.originalImage) return;
+
+  const btn = elements.downloadNameDatePhotoBtn;
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '⚡ Compressing to 20-50 KB JPG…';
+  }
+
+  try {
+    // 1. Force 20-50 KB range and JPEG format
+    state.minKB = 20;
+    state.maxKB = 50;
+    state.outputMime = 'image/jpeg';
+    state.nameDateEnabled = true;
+
+    if (elements.enableNameDateToggle) elements.enableNameDateToggle.checked = true;
+    if (elements.minKbInput) elements.minKbInput.value = 20;
+    if (elements.maxKbInput) elements.maxKbInput.value = 50;
+    if (elements.maxKbSlider) elements.maxKbSlider.value = 50;
+    updateKbRangeDisplay();
+
+    // 2. Render canvas with crisp white strip (18% height)
+    renderCanvas();
+
+    // 3. Pipe canvas directly through kb-engine
+    const result = await compressToExactKB(elements.canvas, 20, 50, 'image/jpeg');
+    state.lastBlob = result.blob;
+    state.lastBlobSize = result.blob.size;
+
+    // Update live readout pills
+    if (elements.outputMetaTag) {
+      elements.outputMetaTag.innerHTML = `Output: <strong>${result.width} × ${result.height} px</strong>`;
+    }
+    if (elements.outputSizePill) {
+      elements.outputSizePill.textContent = `${result.finalKB} KB`;
+      elements.outputSizePill.className = 'output-size-pill';
+    }
+    if (elements.targetStatusText) {
+      elements.targetStatusText.textContent = `✓ Compliant (${result.finalKB} KB in 20-50 KB range)`;
+      elements.targetStatusText.style.color = 'var(--green)';
+    }
+
+    // 4. Instant Download ready-to-upload JPG
+    const safeName = (state.candidateName.trim() || 'candidate')
+      .replace(/[^a-zA-Z0-9]/g, '_')
+      .toLowerCase();
+    const filename = `bpsc_csbc_${safeName}_namedate_20_50kb.jpg`;
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(result.blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    if (btn) {
+      btn.innerHTML = '✓ Downloaded 20-50 KB JPG!';
+      setTimeout(() => {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }, 1800);
+    }
+  } catch (err) {
+    console.error('Error generating Name & Date JPG:', err);
+    alert('Error generating JPG: ' + (err.message || 'Please try again'));
+    if (btn) {
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+    }
   }
 }
 
@@ -580,6 +846,9 @@ export function resetStudio() {
   state.originalImage = null;
   state.loadedFile = null;
   state.rotation = 0;
+  state.flipH = false;
+  state.cropRatio = 'free';
+  state.signatureCleanerActive = false;
   state.zoom = 1;
 
   if (elements.canvas) {
@@ -589,6 +858,7 @@ export function resetStudio() {
 
   if (elements.dropzone) elements.dropzone.style.display = 'block';
   if (elements.canvasWrapper) elements.canvasWrapper.style.display = 'none';
+  if (elements.workspaceCard) elements.workspaceCard.classList.remove('has-file');
 
   if (elements.fileNameTag) elements.fileNameTag.innerHTML = 'File: <strong>Chunein</strong>';
   if (elements.originalMetaTag) elements.originalMetaTag.innerHTML = 'Original: <strong>0 × 0 px (0 KB)</strong>';
@@ -606,8 +876,12 @@ function enableActionButtons(enable) {
     elements.zoomInBtn,
     elements.zoomOutBtn,
     elements.rotateBtn,
+    elements.flipHBtn,
     elements.resetZoomBtn,
-    elements.generatePdfBtn
+    elements.generatePdfBtn,
+    elements.downloadNameDatePhotoBtn,
+    elements.rotateTabBtn,
+    elements.flipHTabBtn
   ];
   btns.forEach((btn) => {
     if (btn) btn.disabled = !enable;
@@ -761,7 +1035,7 @@ export function initStudio() {
     });
   }
 
-  // Name & Date Strip Listeners
+  // Name & Date Strip Listeners (Live Generator)
   if (elements.enableNameDateToggle) {
     elements.enableNameDateToggle.addEventListener('change', (e) => {
       state.nameDateEnabled = e.target.checked;
@@ -783,9 +1057,18 @@ export function initStudio() {
     });
   }
 
-  if (elements.stripBgColor) {
-    elements.stripBgColor.addEventListener('change', (e) => {
-      state.stripBg = e.target.value;
+  if (elements.todayDateBtn) {
+    elements.todayDateBtn.addEventListener('click', () => {
+      const today = getTodayDateFormatted();
+      state.photoDate = today;
+      if (elements.photoDateInput) elements.photoDateInput.value = today;
+      renderAndCompress();
+    });
+  }
+
+  if (elements.stripModeSelect) {
+    elements.stripModeSelect.addEventListener('change', (e) => {
+      state.stripMode = e.target.value;
       renderAndCompress();
     });
   }
@@ -798,13 +1081,6 @@ export function initStudio() {
     });
   }
 
-  if (elements.nameFontSizeSlider) {
-    elements.nameFontSizeSlider.addEventListener('input', (e) => {
-      state.nameFontSize = parseInt(e.target.value, 10);
-      renderAndCompress();
-    });
-  }
-
   if (elements.nameUppercaseToggle) {
     elements.nameUppercaseToggle.addEventListener('change', (e) => {
       state.nameUppercase = e.target.checked;
@@ -812,10 +1088,62 @@ export function initStudio() {
     });
   }
 
-  // Touch-Up Listeners
+  if (elements.downloadNameDatePhotoBtn) {
+    elements.downloadNameDatePhotoBtn.addEventListener('click', downloadNameDateJpg);
+  }
+
+  // --- Touch-Up & Filters Listeners ---
+
+  // 1-Click Signature Paper Cleaner
+  if (elements.cleanSignatureBtn) {
+    elements.cleanSignatureBtn.addEventListener('click', () => {
+      state.signatureCleanerActive = true;
+      state.grayscale = true;
+      state.brightness = 0;
+      state.contrast = 0;
+      if (elements.grayscaleToggle) elements.grayscaleToggle.checked = true;
+      if (elements.brightnessSlider) elements.brightnessSlider.value = 0;
+      if (elements.contrastSlider) elements.contrastSlider.value = 0;
+      if (elements.brightnessDisplay) elements.brightnessDisplay.textContent = '0%';
+      if (elements.contrastDisplay) elements.contrastDisplay.textContent = '0%';
+      renderAndCompress();
+    });
+  }
+
+  if (elements.autoEnhanceBtn) {
+    elements.autoEnhanceBtn.addEventListener('click', () => {
+      state.signatureCleanerActive = false;
+      state.brightness = 15;
+      state.contrast = 25;
+      if (elements.brightnessSlider) elements.brightnessSlider.value = 15;
+      if (elements.contrastSlider) elements.contrastSlider.value = 25;
+      if (elements.brightnessDisplay) elements.brightnessDisplay.textContent = '+15%';
+      if (elements.contrastDisplay) elements.contrastDisplay.textContent = '+25%';
+      renderAndCompress();
+    });
+  }
+
+  // Rotate 90°
+  const handleRotate = () => {
+    state.rotation = (state.rotation + 90) % 360;
+    renderAndCompress();
+  };
+  if (elements.rotateBtn) elements.rotateBtn.addEventListener('click', handleRotate);
+  if (elements.rotateTabBtn) elements.rotateTabBtn.addEventListener('click', handleRotate);
+
+  // Flip Horizontal (Mirror)
+  const handleFlipH = () => {
+    state.flipH = !state.flipH;
+    renderAndCompress();
+  };
+  if (elements.flipHBtn) elements.flipHBtn.addEventListener('click', handleFlipH);
+  if (elements.flipHTabBtn) elements.flipHTabBtn.addEventListener('click', handleFlipH);
+
+  // Brightness & Contrast
   if (elements.brightnessSlider) {
     elements.brightnessSlider.addEventListener('input', (e) => {
       state.brightness = parseInt(e.target.value, 10);
+      state.signatureCleanerActive = false; // Custom slider adjusts manually
       if (elements.brightnessDisplay) {
         elements.brightnessDisplay.textContent = `${state.brightness > 0 ? '+' : ''}${state.brightness}%`;
       }
@@ -826,6 +1154,7 @@ export function initStudio() {
   if (elements.contrastSlider) {
     elements.contrastSlider.addEventListener('input', (e) => {
       state.contrast = parseInt(e.target.value, 10);
+      state.signatureCleanerActive = false;
       if (elements.contrastDisplay) {
         elements.contrastDisplay.textContent = `${state.contrast > 0 ? '+' : ''}${state.contrast}%`;
       }
@@ -840,47 +1169,72 @@ export function initStudio() {
     });
   }
 
-  if (elements.cleanSignatureBtn) {
-    elements.cleanSignatureBtn.addEventListener('click', () => {
-      state.brightness = 35;
-      state.contrast = 65;
-      state.grayscale = true;
-      if (elements.brightnessSlider) elements.brightnessSlider.value = 35;
-      if (elements.contrastSlider) elements.contrastSlider.value = 65;
-      if (elements.grayscaleToggle) elements.grayscaleToggle.checked = true;
-      if (elements.brightnessDisplay) elements.brightnessDisplay.textContent = '+35%';
-      if (elements.contrastDisplay) elements.contrastDisplay.textContent = '+65%';
+  // Aspect-Ratio Crop Presets (Free, Passport 3.5:4.5, Square 1:1, Signature 3:1)
+  if (elements.cropPresetsGrid) {
+    elements.cropPresetsGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.aspect-btn');
+      if (!btn) return;
+      elements.cropPresetsGrid.querySelectorAll('.aspect-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const ratio = btn.getAttribute('data-ratio');
+      state.cropRatio = ratio;
+
+      if (ratio === '3.5:4.5') {
+        state.currentWidth = 350;
+        state.currentHeight = 450;
+      } else if (ratio === '1:1') {
+        const side = Math.min(state.currentWidth, state.currentHeight);
+        state.currentWidth = side;
+        state.currentHeight = side;
+      } else if (ratio === '3:1') {
+        state.currentWidth = 300;
+        state.currentHeight = 100;
+      } else if (ratio === 'free') {
+        state.currentWidth = state.originalWidth || 200;
+        state.currentHeight = state.originalHeight || 230;
+      }
+
+      if (elements.dimWidth) elements.dimWidth.value = state.currentWidth;
+      if (elements.dimHeight) elements.dimHeight.value = state.currentHeight;
+
       renderAndCompress();
     });
   }
 
-  if (elements.autoEnhanceBtn) {
-    elements.autoEnhanceBtn.addEventListener('click', () => {
-      state.brightness = 15;
-      state.contrast = 25;
-      if (elements.brightnessSlider) elements.brightnessSlider.value = 15;
-      if (elements.contrastSlider) elements.contrastSlider.value = 25;
-      if (elements.brightnessDisplay) elements.brightnessDisplay.textContent = '+15%';
-      if (elements.contrastDisplay) elements.contrastDisplay.textContent = '+25%';
-      renderAndCompress();
-    });
-  }
-
+  // Reset Filters & Transforms
   if (elements.resetFiltersBtn) {
     elements.resetFiltersBtn.addEventListener('click', () => {
       state.brightness = 0;
       state.contrast = 0;
       state.grayscale = false;
+      state.signatureCleanerActive = false;
+      state.flipH = false;
+      state.rotation = 0;
+      state.cropRatio = 'free';
+
       if (elements.brightnessSlider) elements.brightnessSlider.value = 0;
       if (elements.contrastSlider) elements.contrastSlider.value = 0;
       if (elements.grayscaleToggle) elements.grayscaleToggle.checked = false;
       if (elements.brightnessDisplay) elements.brightnessDisplay.textContent = '0%';
       if (elements.contrastDisplay) elements.contrastDisplay.textContent = '0%';
+
+      if (elements.cropPresetsGrid) {
+        elements.cropPresetsGrid.querySelectorAll('.aspect-btn').forEach((b) => {
+          b.classList.toggle('active', b.getAttribute('data-ratio') === 'free');
+        });
+      }
+
+      state.currentWidth = state.originalWidth || 200;
+      state.currentHeight = state.originalHeight || 230;
+      if (elements.dimWidth) elements.dimWidth.value = state.currentWidth;
+      if (elements.dimHeight) elements.dimHeight.value = state.currentHeight;
+
       renderAndCompress();
     });
   }
 
-  // Viewport Zoom & Rotate Controls
+  // Viewport Zoom
   if (elements.zoomInBtn) {
     elements.zoomInBtn.addEventListener('click', () => {
       state.zoom = Math.min(2.5, state.zoom + 0.15);
@@ -902,13 +1256,6 @@ export function initStudio() {
       state.zoom = 1;
       if (elements.canvasWrapper) elements.canvasWrapper.style.transform = 'scale(1)';
       if (elements.zoomLevelTag) elements.zoomLevelTag.textContent = '100%';
-    });
-  }
-
-  if (elements.rotateBtn) {
-    elements.rotateBtn.addEventListener('click', () => {
-      state.rotation = (state.rotation + 90) % 360;
-      renderAndCompress();
     });
   }
 
@@ -1028,12 +1375,15 @@ if (typeof document !== 'undefined') {
 export default {
   state,
   EXAM_PRESETS,
+  getTodayDateFormatted,
   handleFile,
   renderCanvas,
   runCompression,
   renderAndCompress,
   applyPreset,
+  downloadNameDateJpg,
   downloadFile,
   resetStudio,
+  updateStatusBadges,
   initStudio
 };

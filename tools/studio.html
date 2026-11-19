@@ -121,8 +121,24 @@
         <span class="badge-dot"></span>
         <span>100% Free · Client-Side Private · Cyber Cafe Friendly</span>
       </div>
-      <h1>BiharFast <span class="text-gradient">Photo & Doc Studio</span></h1>
+      <h1>BiharFast <span class="text-gradient">Photo &amp; Doc Studio</span></h1>
       <p>BPSC, CSBC Bihar Police, PAN Card (213×213) aur Bihar RTPS ke liye photo, signature aur PDF ko bina quality khoye perfect size me banayein.</p>
+      
+      <!-- Mobile-First Hindi / Hinglish Status Badges -->
+      <div class="studio-status-strip" aria-label="Sarkari Status Badges">
+        <span class="status-badge badge-bpsc" id="portalBadge">
+          <span class="badge-dot-green"></span>
+          <span id="portalBadgeText">Ready for BPSC</span>
+        </span>
+        <span class="status-badge badge-limit" id="limitBadge">
+          <span class="badge-icon">⚡</span>
+          <span id="limitBadgeText">Under 50 KB</span>
+        </span>
+        <span class="status-badge badge-offline">
+          <span class="badge-icon">🔒</span>
+          <span>100% Offline - No Upload</span>
+        </span>
+      </div>
     </section>
 
     <!-- Interactive 2-Column Studio Workspace -->
@@ -145,6 +161,7 @@
               <span class="info-chip" id="zoomLevelTag">100%</span>
               <button class="icon-btn" id="zoomInBtn" title="Zoom In" aria-label="Zoom In" disabled>+</button>
               <button class="icon-btn" id="rotateBtn" title="Rotate 90° Clockwise" aria-label="Rotate 90 degrees" disabled>↻</button>
+              <button class="icon-btn" id="flipHBtn" title="Flip Horizontal (Mirror)" aria-label="Flip Horizontal" disabled>⇄</button>
               <button class="icon-btn" id="resetZoomBtn" title="Fit to Screen" aria-label="Reset View" disabled>⛶</button>
             </div>
           </div>
@@ -310,7 +327,7 @@
 
               <div class="control-section">
                 <div class="toggle-row" style="border:none; padding-top:0;">
-                  <span style="font-size:0.88rem; font-weight:700; color:var(--ink);">Enable Name & Date Strip</span>
+                  <span style="font-size:0.88rem; font-weight:700; color:var(--ink);">Enable Name &amp; Date Strip</span>
                   <label class="toggle-switch">
                     <input type="checkbox" id="enableNameDateToggle" checked>
                     <span class="toggle-slider"></span>
@@ -319,46 +336,47 @@
               </div>
 
               <div class="control-section" id="nameDateControlsContainer">
-                <label class="field-sublabel" for="candidateNameInput">Candidate ka Poora Naam (Capital Letters)</label>
-                <input type="text" class="input-text" id="candidateNameInput" placeholder="Jaise: RAHUL KUMAR" value="ANURAG KUMAR" style="margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <label class="field-sublabel" for="candidateNameInput" style="margin:0;">Line 1: Candidate Full Name</label>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <label for="nameUppercaseToggle" style="font-size:0.74rem; color:var(--muted); cursor:pointer;">Auto-UPPERCASE</label>
+                    <input type="checkbox" id="nameUppercaseToggle" checked style="cursor:pointer;">
+                  </div>
+                </div>
+                <input type="text" class="input-text" id="candidateNameInput" placeholder="e.g. RAHUL KUMAR" value="ANURAG KUMAR" style="margin-bottom:12px;">
 
                 <div class="input-row">
                   <div>
-                    <label class="field-sublabel" for="photoDateInput">Photo lene ki Tareekh (DOP)</label>
-                    <input type="text" class="input-text" id="photoDateInput" placeholder="DD/MM/YYYY" value="DOP: 15/11/2026">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                      <label class="field-sublabel" for="photoDateInput" style="margin:0;">Line 2: Date of Photo (DD-MM-YYYY)</label>
+                      <button type="button" id="todayDateBtn" style="background:none; border:none; padding:0; color:var(--cyan); font-size:0.72rem; cursor:pointer; text-decoration:underline;">Today</button>
+                    </div>
+                    <input type="text" class="input-text" id="photoDateInput" placeholder="DD-MM-YYYY" value="19-11-2026">
                   </div>
                   <div>
-                    <label class="field-sublabel" for="stripBgColor">Strip Background</label>
-                    <select class="input-select" id="stripBgColor">
-                      <option value="#ffffff" selected>White Strip (Standard)</option>
-                      <option value="#000000">Black Strip</option>
-                      <option value="transparent">Transparent</option>
+                    <label class="field-sublabel" for="stripModeSelect">White Strip Placement</label>
+                    <select class="input-select" id="stripModeSelect">
+                      <option value="append" selected>Append Below (18% Height)</option>
+                      <option value="overlay">Overlay on Bottom Frame</option>
                     </select>
                   </div>
                 </div>
 
                 <div class="control-section">
                   <div class="control-label">
-                    <span>Strip Height</span>
-                    <span class="val-tag" id="stripHeightDisplay">20%</span>
+                    <span>Crisp White Strip Height</span>
+                    <span class="val-tag" id="stripHeightDisplay">18%</span>
                   </div>
-                  <input type="range" class="custom-range" id="stripHeightSlider" min="12" max="32" value="20">
+                  <input type="range" class="custom-range" id="stripHeightSlider" min="12" max="28" value="18">
                 </div>
 
-                <div class="control-section">
-                  <div class="control-label">
-                    <span>Font Size</span>
-                    <span class="val-tag" id="nameFontSizeDisplay">Medium</span>
-                  </div>
-                  <input type="range" class="custom-range" id="nameFontSizeSlider" min="14" max="36" value="22">
-                </div>
-
-                <div class="toggle-row">
-                  <span style="font-size:0.82rem; color:var(--muted);">Uppercase (Auto Capital Letters)</span>
-                  <label class="toggle-switch">
-                    <input type="checkbox" id="nameUppercaseToggle" checked>
-                    <span class="toggle-slider"></span>
-                  </label>
+                <div class="control-section" style="margin-top:16px;">
+                  <button type="button" class="btn-primary" id="downloadNameDatePhotoBtn" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.94rem;">
+                    <span aria-hidden="true">⚡</span> Download 20-50 KB Ready JPG
+                  </button>
+                  <p style="margin: 8px 0 0; font-size: 0.74rem; color: var(--muted); text-align: center;">
+                    Piped through kb-engine: strictly compliant 20 - 50 KB JPG for BPSC, CSBC &amp; SSC.
+                  </p>
                 </div>
               </div>
             </div>
@@ -417,18 +435,34 @@
             <!-- TAB 4: Touch-Up & Filters -->
             <div class="tab-pane" id="pane-touchup" role="tabpanel" aria-labelledby="tab-touchup">
               
+              <!-- 1-Click Signature Paper Cleaner -->
               <div class="control-section">
-                <span class="control-label">Quick Document Fixes</span>
-                <div class="aspect-btn-grid" style="grid-template-columns: 1fr 1fr; margin-bottom:12px;">
-                  <button type="button" class="aspect-btn" id="cleanSignatureBtn">
-                    ✍ Clean Signature (B&amp;W)
+                <span class="control-label">1-Click Signature &amp; Document Fixes</span>
+                <button type="button" class="btn-primary" id="cleanSignatureBtn" style="width: 100%; justify-content: center; margin-bottom: 8px; padding: 11px 16px;">
+                  ✍ 1-Click Signature Paper Cleaner
+                </button>
+                <p class="field-sublabel" style="line-height: 1.5; margin-bottom: 12px; font-size: 0.73rem;">
+                  Mobile camera ke shadows, peelepan aur desk glare ko mita kar pure white paper par crisp dark ink banata hai.
+                </p>
+                <button type="button" class="aspect-btn" id="autoEnhanceBtn" style="width: 100%; text-align: center; padding: 8px;">
+                  ✨ Auto Enhance Photo &amp; Document
+                </button>
+              </div>
+
+              <!-- Canvas Transforms: Rotate 90° & Flip Horizontal -->
+              <div class="control-section">
+                <span class="control-label">Canvas Transforms</span>
+                <div class="input-row">
+                  <button type="button" class="btn-secondary" id="rotateTabBtn" style="justify-content: center; padding: 9px 12px; font-size: 0.84rem;">
+                    ↻ Rotate 90°
                   </button>
-                  <button type="button" class="aspect-btn" id="autoEnhanceBtn">
-                    ✨ Auto Enhance Doc
+                  <button type="button" class="btn-secondary" id="flipHTabBtn" style="justify-content: center; padding: 9px 12px; font-size: 0.84rem;">
+                    ⇄ Flip Horizontal
                   </button>
                 </div>
               </div>
 
+              <!-- Brightness & Contrast -->
               <div class="control-section">
                 <div class="control-label">
                   <span>Brightness (Ujala)</span>
@@ -455,21 +489,20 @@
                 </div>
               </div>
 
+              <!-- Aspect Ratio Crop Presets -->
               <div class="control-section">
-                <span class="control-label">Quick Aspect Ratio Crop</span>
-                <div class="aspect-btn-grid">
-                  <button type="button" class="aspect-btn active" data-ratio="free">Original</button>
-                  <button type="button" class="aspect-btn" data-ratio="1:1">1:1 Square</button>
-                  <button type="button" class="aspect-btn" data-ratio="3.5:4.5">Passport (3.5:4.5)</button>
-                  <button type="button" class="aspect-btn" data-ratio="2:1">Signature (2:1)</button>
-                  <button type="button" class="aspect-btn" data-ratio="213:213">PAN (1:1)</button>
-                  <button type="button" class="aspect-btn" data-ratio="4:3">Doc 4:3</button>
+                <span class="control-label">Aspect-Ratio Crop Presets</span>
+                <div class="aspect-btn-grid" id="cropPresetsGrid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                  <button type="button" class="aspect-btn active" data-ratio="free">Free (Original)</button>
+                  <button type="button" class="aspect-btn" data-ratio="3.5:4.5">Passport 3.5:4.5</button>
+                  <button type="button" class="aspect-btn" data-ratio="1:1">Square 1:1</button>
+                  <button type="button" class="aspect-btn" data-ratio="3:1">Signature 3:1</button>
                 </div>
               </div>
 
               <div class="control-section">
                 <button type="button" class="btn-secondary" id="resetFiltersBtn" style="width: 100%; justify-content: center;">
-                  Reset Filters to Default
+                  Reset Filters &amp; Transforms
                 </button>
               </div>
 
