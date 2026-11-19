@@ -29,7 +29,13 @@
   <script src="../assets/js/main.js" defer></script>
   <!-- BiharFast KB Engine (Pure Client-Side ES Module) -->
   <script type="module" src="../assets/js/kb-engine.js"></script>
-  <!-- jsPDF for client-side RTPS PDF generation -->
+  <!-- pdf-lib (Local bundle with fallback) for high-performance multi-page PDF compilation -->
+  <script src="../assets/js/pdf-lib.min.js"></script>
+  <!-- PDF.js (Local bundle with fallback) for rendering local PDFs to HTML5 Canvas -->
+  <script src="../assets/js/pdf.min.js"></script>
+  <!-- BiharFast PDF Engine (Client-Side Multi-Page ES Module) -->
+  <script type="module" src="../assets/js/pdf-engine.js"></script>
+  <!-- jsPDF for fallback -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <!-- Schema.org FAQ & WebApplication Structured Data -->
@@ -381,54 +387,164 @@
               </div>
             </div>
 
-            <!-- TAB 3: PDF 200KB (RTPS Bihar) -->
+            <!-- TAB 3: PDF 200KB & PDF to JPG Studio -->
             <div class="tab-pane" id="pane-pdf" role="tabpanel" aria-labelledby="tab-pdf">
-              <div class="tab-alert warning">
-                <span aria-hidden="true">⚡</span>
-                <span><strong>Bihar RTPS Portal Special:</strong> Jati, Aawasiya, Aay, EWS aur Non-Creamy Layer me documents <strong>200 KB PDF</strong> me hi upload hote hain.</span>
-              </div>
-
-              <div class="control-section">
-                <span class="control-label">Target PDF Size Preset</span>
-                <div class="presets-grid" id="pdfPresetGrid">
-                  <button type="button" class="preset-chip active" data-pdfkb="195">RTPS Max 200 KB</button>
-                  <button type="button" class="preset-chip" data-pdfkb="100">BPSC Max 100 KB</button>
-                  <button type="button" class="preset-chip" data-pdfkb="300">Standard 300 KB</button>
-                  <button type="button" class="preset-chip" data-pdfkb="500">HQ 500 KB</button>
-                </div>
-              </div>
-
-              <div class="control-section">
-                <span class="control-label">PDF Page Orientation</span>
-                <select class="input-select" id="pdfOrientation">
-                  <option value="portrait" selected>Portrait (Aadhaar / Certificate Standard)</option>
-                  <option value="landscape">Landscape (Horizontal Document)</option>
-                  <option value="auto">Auto Detect according to Image</option>
-                </select>
-              </div>
-
-              <div class="control-section">
-                <div class="control-label">
-                  <span>Compression Strength (DPI Quality)</span>
-                  <span class="val-tag" id="pdfDpiDisplay">Optimal (150 DPI)</span>
-                </div>
-                <input type="range" class="custom-range" id="pdfCompressionSlider" min="1" max="3" value="2" step="1">
-                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--muted); margin-top:4px;">
-                  <span>High Compression (&lt;100KB)</span>
-                  <span>Optimal (&lt;200KB)</span>
-                  <span>High Quality</span>
-                </div>
-              </div>
-
-              <div class="control-section">
-                <button type="button" class="btn-primary" id="generatePdfBtn" style="width: 100%; justify-content: center;" disabled>
-                  <span aria-hidden="true">📄</span> Generate RTPS PDF (&lt;200 KB)
+              
+              <!-- Submode Switcher: Photos to PDF vs PDF to JPG -->
+              <div class="pdf-mode-switcher" id="pdfModeSwitcher" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+                <button type="button" class="aspect-btn active" id="pdfModeCompilerBtn" style="padding: 10px 6px; font-weight: 750;">
+                  📑 Photos to PDF (&lt;200 KB)
+                </button>
+                <button type="button" class="aspect-btn" id="pdfModeExtractorBtn" style="padding: 10px 6px; font-weight: 750;">
+                  🖼️ PDF to JPG (Extract)
                 </button>
               </div>
 
-              <div class="tab-alert success">
-                <span aria-hidden="true">✓</span>
-                <span>PDF client-side banta hai. Aapka Aadhaar ya sensitive dastavez internet par kisi third-party server par nahi jata.</span>
+              <!-- ============================================== -->
+              <!-- SUB-MODE 1: Photos to PDF Compiler (<200 KB)   -->
+              <!-- ============================================== -->
+              <div id="pdfCompilerSection">
+                <div class="tab-alert warning">
+                  <span aria-hidden="true">⚡</span>
+                  <span><strong>Bihar RTPS &amp; BPSC Portal Special:</strong> Aadhaar Front/Back aur Marksheet ko strictly <strong>100 KB / 150 KB / 200 KB PDF</strong> me compile karein.</span>
+                </div>
+
+                <!-- Target PDF Limit Selector -->
+                <div class="control-section">
+                  <span class="control-label">Target PDF Size Limit</span>
+                  <div class="presets-grid" id="pdfPresetGrid">
+                    <button type="button" class="preset-chip active" data-pdfkb="200">RTPS &lt;200 KB</button>
+                    <button type="button" class="preset-chip" data-pdfkb="150">Medium &lt;150 KB</button>
+                    <button type="button" class="preset-chip" data-pdfkb="100">BPSC &lt;100 KB</button>
+                    <button type="button" class="preset-chip" data-pdfkb="300">Standard 300 KB</button>
+                  </div>
+                </div>
+
+                <!-- Document Photos Multi-Upload & Page Manager -->
+                <div class="control-section">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span class="control-label" style="margin-bottom:0;">Document Pages (Photos)</span>
+                    <button type="button" class="aspect-btn" id="clearAllPdfPagesBtn" style="font-size:0.7rem; padding:3px 8px; color:var(--amber); display:none;">Clear All</button>
+                  </div>
+
+                  <input type="file" id="pdfMultiFileInput" accept="image/jpeg,image/png,image/webp" multiple class="visually-hidden">
+                  
+                  <button type="button" class="btn-secondary" id="addPdfPageBtn" style="width: 100%; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                    <span aria-hidden="true">📁</span> + Add Photos (Aadhaar Front/Back, Marksheet)
+                  </button>
+
+                  <button type="button" class="aspect-btn" id="addCurrentCanvasToPdfBtn" style="width: 100%; justify-content: center; margin-bottom: 12px; font-size: 0.74rem;">
+                    📷 Current Workspace Photo ko Page banayein
+                  </button>
+
+                  <!-- Visual Page Cards Container -->
+                  <div class="pdf-pages-list" id="pdfPagesList">
+                    <div class="pdf-empty-state" id="pdfEmptyState">
+                      <span>📄 Abhi koi page add nahi hai.<br>Upar button se Aadhaar Front/Back ya Marksheet add karein.</span>
+                    </div>
+                  </div>
+
+                  <!-- Page Summary Info Strip -->
+                  <div class="pdf-summary-strip" id="pdfSummaryStrip" style="margin-top: 8px; font-size: 0.74rem; color: var(--muted); display: flex; justify-content: space-between;">
+                    <span>Pages: <strong id="pdfPageCount" style="color:var(--ink);">0</strong></span>
+                    <span>Target Limit: <strong id="pdfTargetLimitTag" style="color: var(--cyan);">Strict &lt;200 KB</strong></span>
+                  </div>
+                </div>
+
+                <!-- Page Orientation -->
+                <div class="control-section">
+                  <span class="control-label">PDF Page Orientation</span>
+                  <select class="input-select" id="pdfOrientation">
+                    <option value="portrait" selected>Portrait (Standard Aadhaar / Marksheet)</option>
+                    <option value="landscape">Landscape (Horizontal Document)</option>
+                    <option value="auto">Auto Detect according to Photo</option>
+                  </select>
+                </div>
+
+                <!-- Dynamic Progress Indicator (Visible during generation) -->
+                <div class="pdf-progress-box" id="pdfProgressBox" style="display: none; margin: 14px 0;">
+                  <div class="pdf-progress-bar">
+                    <div class="pdf-progress-fill" id="pdfProgressFill" style="width: 0%;"></div>
+                  </div>
+                  <div class="pdf-progress-text" id="pdfProgressText" style="font-size: 0.75rem; color: var(--cyan); margin-top: 6px; text-align: center;">Compressing pages…</div>
+                </div>
+
+                <!-- Generate Button -->
+                <div class="control-section">
+                  <button type="button" class="btn-primary" id="generatePdfBtn" style="width: 100%; justify-content: center;" disabled>
+                    <span aria-hidden="true">📄</span> Generate &amp; Download PDF (&lt;200 KB)
+                  </button>
+                </div>
+
+                <!-- Success / Ready Status Notice -->
+                <div class="tab-alert success" id="pdfSuccessNotice" style="display: none; margin-top: 10px;">
+                  <span aria-hidden="true">✓</span>
+                  <span id="pdfSuccessNoticeText">PDF ready!</span>
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- SUB-MODE 2: PDF to JPG Extractor (PDF.js)      -->
+              <!-- ============================================== -->
+              <div id="pdfExtractorSection" style="display: none;">
+                <div class="tab-alert warning">
+                  <span aria-hidden="true">💡</span>
+                  <span><strong>e-Aadhaar &amp; Certificate Extractor:</strong> Kisi bhi local PDF ke pages ko high-quality JPG me convert karein aur sidhe KB Resizer me bhej kar 20-50 KB banayein.</span>
+                </div>
+
+                <!-- Upload Local PDF File -->
+                <div class="control-section">
+                  <span class="control-label">Upload Local PDF Document</span>
+                  <input type="file" id="pdfExtractorFileInput" accept="application/pdf" class="visually-hidden">
+                  
+                  <button type="button" class="btn-primary" id="selectPdfForExtractBtn" style="width: 100%; justify-content: center; gap: 8px; padding: 12px 16px;">
+                    <span aria-hidden="true">📂</span> Chunein PDF Document (e-Aadhaar, Marksheet)
+                  </button>
+
+                  <p class="field-sublabel" style="margin-top: 6px; font-size: 0.72rem; line-height: 1.4;">
+                    100% Offline: PDF file client-side browser me hi canvas par render hoti hai. Koi data bahar nahi jata.
+                  </p>
+                </div>
+
+                <!-- Render Scale Selector -->
+                <div class="control-section">
+                  <span class="control-label">Render Resolution (Quality)</span>
+                  <select class="input-select" id="pdfRenderScaleSelect">
+                    <option value="1.5">Standard (1.5× Scale - Tez Rendering)</option>
+                    <option value="2.0" selected>High Resolution (2.0× Scale - Crisp Text)</option>
+                    <option value="3.0">Ultra HD (3.0× Scale - Marksheet Print)</option>
+                  </select>
+                </div>
+
+                <!-- Extractor Progress Indicator -->
+                <div class="pdf-progress-box" id="pdfExtractProgressBox" style="display: none; margin: 12px 0;">
+                  <div class="pdf-progress-bar">
+                    <div class="pdf-progress-fill" id="pdfExtractProgressFill" style="width: 0%;"></div>
+                  </div>
+                  <div class="pdf-progress-text" id="pdfExtractProgressText" style="font-size: 0.75rem; color: var(--cyan); margin-top: 6px; text-align: center;">PDF render ho raha hai…</div>
+                </div>
+
+                <!-- Extracted Pages Visual List -->
+                <div class="control-section">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span class="control-label" style="margin-bottom: 0;">Extracted Pages (<span id="pdfExtractedCount">0</span>)</span>
+                    <button type="button" class="aspect-btn" id="downloadAllPagesJpgBtn" style="font-size: 0.7rem; padding: 3px 8px; color: var(--cyan); display: none;">
+                      ⬇ Download All JPGs
+                    </button>
+                  </div>
+
+                  <div class="pdf-extracted-list" id="pdfExtractedPagesList">
+                    <div class="pdf-empty-state" id="pdfExtractEmptyState">
+                      <span>📄 Abhi koi PDF load nahi hai.<br>Upar button se PDF Document upload karein.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Shared Privacy Notice -->
+              <div class="tab-alert success" style="margin-top: 14px;">
+                <span aria-hidden="true">🔒</span>
+                <span>Client-Side PDF compilation &amp; extraction. Aapka dastavez internet par kisi third-party server par nahi jata.</span>
               </div>
             </div>
 

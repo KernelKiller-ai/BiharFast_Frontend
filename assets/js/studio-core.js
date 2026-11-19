@@ -26,6 +26,14 @@
  */
 
 import { compressToExactKB, increaseToMinKB } from './kb-engine.js';
+import {
+  generateA4PdfFromImages,
+  downloadPdf,
+  loadPdfDocument,
+  renderPdfPageToCanvas,
+  extractAllPdfPages,
+  downloadCanvasAsJpg
+} from './pdf-engine.js';
 
 /**
  * Returns today's date formatted as DD-MM-YYYY
@@ -157,10 +165,15 @@ export const state = {
   grayscale: false,
   signatureCleanerActive: false, // 1-click signature paper cleaner
 
-  // PDF
-  pdfTargetKb: 195,
+  // Multi-Page PDF Compiler
+  pdfPages: [],
+  pdfTargetKb: 200,
   pdfOrientation: 'portrait',
-  pdfDpiQuality: 2
+
+  // PDF to JPG Extractor
+  pdfExtractorMode: 'compiler',
+  extractedPdfPages: [],
+  pdfRenderScale: 2.0
 };
 
 // DOM Elements Cache
@@ -233,12 +246,39 @@ function cacheElements() {
     cropPresetsGrid: document.getElementById('cropPresetsGrid'),
     resetFiltersBtn: document.getElementById('resetFiltersBtn'),
 
-    // PDF Controls
+    // PDF Multi-Page Controls
     pdfPresetGrid: document.getElementById('pdfPresetGrid'),
     pdfOrientation: document.getElementById('pdfOrientation'),
-    pdfCompressionSlider: document.getElementById('pdfCompressionSlider'),
-    pdfDpiDisplay: document.getElementById('pdfDpiDisplay'),
-    generatePdfBtn: document.getElementById('generatePdfBtn')
+    pdfMultiFileInput: document.getElementById('pdfMultiFileInput'),
+    addPdfPageBtn: document.getElementById('addPdfPageBtn'),
+    addCurrentCanvasToPdfBtn: document.getElementById('addCurrentCanvasToPdfBtn'),
+    clearAllPdfPagesBtn: document.getElementById('clearAllPdfPagesBtn'),
+    pdfPagesList: document.getElementById('pdfPagesList'),
+    pdfEmptyState: document.getElementById('pdfEmptyState'),
+    pdfPageCount: document.getElementById('pdfPageCount'),
+    pdfTargetLimitTag: document.getElementById('pdfTargetLimitTag'),
+    pdfProgressBox: document.getElementById('pdfProgressBox'),
+    pdfProgressFill: document.getElementById('pdfProgressFill'),
+    pdfProgressText: document.getElementById('pdfProgressText'),
+    generatePdfBtn: document.getElementById('generatePdfBtn'),
+    pdfSuccessNotice: document.getElementById('pdfSuccessNotice'),
+    pdfSuccessNoticeText: document.getElementById('pdfSuccessNoticeText'),
+
+    // PDF Mode Switcher & Extractor Controls
+    pdfModeCompilerBtn: document.getElementById('pdfModeCompilerBtn'),
+    pdfModeExtractorBtn: document.getElementById('pdfModeExtractorBtn'),
+    pdfCompilerSection: document.getElementById('pdfCompilerSection'),
+    pdfExtractorSection: document.getElementById('pdfExtractorSection'),
+    pdfExtractorFileInput: document.getElementById('pdfExtractorFileInput'),
+    selectPdfForExtractBtn: document.getElementById('selectPdfForExtractBtn'),
+    pdfRenderScaleSelect: document.getElementById('pdfRenderScaleSelect'),
+    pdfExtractProgressBox: document.getElementById('pdfExtractProgressBox'),
+    pdfExtractProgressFill: document.getElementById('pdfExtractProgressFill'),
+    pdfExtractProgressText: document.getElementById('pdfExtractProgressText'),
+    pdfExtractedCount: document.getElementById('pdfExtractedCount'),
+    downloadAllPagesJpgBtn: document.getElementById('downloadAllPagesJpgBtn'),
+    pdfExtractedPagesList: document.getElementById('pdfExtractedPagesList'),
+    pdfExtractEmptyState: document.getElementById('pdfExtractEmptyState')
   };
 }
 
@@ -315,30 +355,12 @@ function handlePdfFile(file) {
   if (elements.canvasWrapper) elements.canvasWrapper.style.display = 'block';
   if (elements.workspaceCard) elements.workspaceCard.classList.add('has-file');
 
-  // Render placeholder on canvas
-  const canvas = elements.canvas;
-  if (canvas) {
-    canvas.width = 600;
-    canvas.height = 800;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, 600, 800);
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 22px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('PDF Document Uploaded', 300, 380);
-    ctx.fillStyle = '#a4b0c2';
-    ctx.font = '16px Inter, sans-serif';
-    ctx.fillText(`${truncateFilename(file.name)} (${formatBytes(file.size)})`, 300, 415);
-    ctx.fillText('RTPS <200KB Compression Ready', 300, 445);
-  }
+  // Activate Tab 3 in Extractor mode and process PDF with PDF.js
+  const pdfTabBtn = document.querySelector('.tab-btn[data-target="pane-pdf"]');
+  if (pdfTabBtn) pdfTabBtn.click();
+  switchPdfMode('extractor');
 
-  enableActionButtons(true);
-  if (elements.outputSizePill) elements.outputSizePill.textContent = formatBytes(file.size);
-  if (elements.targetStatusText) {
-    elements.targetStatusText.textContent = 'PDF ready for RTPS compression';
-    elements.targetStatusText.style.color = 'var(--cyan)';
-  }
+  handlePdfExtractorFile(file);
 }
 
 /**
@@ -1268,19 +1290,89 @@ export function initStudio() {
     elements.clearBtn.addEventListener('click', resetStudio);
   }
 
-  // PDF Presets & Generator
+  // PDF Presets & Multi-Page Manager Listeners
   if (elements.pdfPresetGrid) {
     elements.pdfPresetGrid.addEventListener('click', (e) => {
       const chip = e.target.closest('.preset-chip');
       if (!chip) return;
       elements.pdfPresetGrid.querySelectorAll('.preset-chip').forEach((c) => c.classList.remove('active'));
       chip.classList.add('active');
-      state.pdfTargetKb = parseInt(chip.getAttribute('data-pdfkb'), 10);
+      const kb = parseInt(chip.getAttribute('data-pdfkb'), 10) || 200;
+      state.pdfTargetKb = kb;
+      if (elements.pdfTargetLimitTag) {
+        elements.pdfTargetLimitTag.textContent = `Strict <${kb} KB`;
+      }
+      if (elements.generatePdfBtn) {
+        elements.generatePdfBtn.innerHTML = `<span aria-hidden="true">📄</span> Generate &amp; Download PDF (&lt;${kb} KB)`;
+      }
     });
   }
 
+  if (elements.pdfOrientation) {
+    elements.pdfOrientation.addEventListener('change', (e) => {
+      state.pdfOrientation = e.target.value;
+    });
+  }
+
+  if (elements.addPdfPageBtn && elements.pdfMultiFileInput) {
+    elements.addPdfPageBtn.addEventListener('click', () => {
+      elements.pdfMultiFileInput.click();
+    });
+  }
+
+  if (elements.pdfMultiFileInput) {
+    elements.pdfMultiFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        addPdfFiles(e.target.files);
+        elements.pdfMultiFileInput.value = ''; // Reset input so same file can be selected again
+      }
+    });
+  }
+
+  if (elements.addCurrentCanvasToPdfBtn) {
+    elements.addCurrentCanvasToPdfBtn.addEventListener('click', addCurrentCanvasToPdf);
+  }
+
+  if (elements.clearAllPdfPagesBtn) {
+    elements.clearAllPdfPagesBtn.addEventListener('click', clearAllPdfPages);
+  }
+
   if (elements.generatePdfBtn) {
-    elements.generatePdfBtn.addEventListener('click', exportRtpsPdf);
+    elements.generatePdfBtn.addEventListener('click', compileAndDownloadPdf);
+  }
+
+  // PDF Mode Switcher (Compiler vs Extractor)
+  if (elements.pdfModeCompilerBtn) {
+    elements.pdfModeCompilerBtn.addEventListener('click', () => switchPdfMode('compiler'));
+  }
+  if (elements.pdfModeExtractorBtn) {
+    elements.pdfModeExtractorBtn.addEventListener('click', () => switchPdfMode('extractor'));
+  }
+
+  // PDF to JPG Extractor Listeners
+  if (elements.selectPdfForExtractBtn && elements.pdfExtractorFileInput) {
+    elements.selectPdfForExtractBtn.addEventListener('click', () => {
+      elements.pdfExtractorFileInput.click();
+    });
+  }
+
+  if (elements.pdfExtractorFileInput) {
+    elements.pdfExtractorFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handlePdfExtractorFile(e.target.files[0]);
+        elements.pdfExtractorFileInput.value = '';
+      }
+    });
+  }
+
+  if (elements.pdfRenderScaleSelect) {
+    elements.pdfRenderScaleSelect.addEventListener('change', (e) => {
+      state.pdfRenderScale = parseFloat(e.target.value) || 2.0;
+    });
+  }
+
+  if (elements.downloadAllPagesJpgBtn) {
+    elements.downloadAllPagesJpgBtn.addEventListener('click', downloadAllExtractedPagesJpg);
   }
 
   // Set default preset on startup
@@ -1288,65 +1380,407 @@ export function initStudio() {
 }
 
 /**
- * RTPS PDF Export via jsPDF
+ * Add image files to the PDF Pages collection
+ * @param {FileList|Array<File>} files
  */
-function exportRtpsPdf() {
-  if (!elements.canvas || !elements.canvas.width) return;
+export function addPdfFiles(files) {
+  if (!files || files.length === 0) return;
 
-  elements.generatePdfBtn.disabled = true;
-  elements.generatePdfBtn.innerHTML = 'Generating RTPS PDF…';
+  const validFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
+  if (validFiles.length === 0) {
+    alert('Kripya image file (JPG, PNG, WebP) chunein.');
+    return;
+  }
+
+  validFiles.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const img = new Image();
+      img.onload = () => {
+        state.pdfPages.push({
+          id: 'page_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+          name: file.name,
+          file: file,
+          dataUrl: dataUrl,
+          img: img,
+          width: img.naturalWidth || img.width,
+          height: img.naturalHeight || img.height,
+          sizeBytes: file.size
+        });
+        renderPdfPagesList();
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Add the current active workspace photo to the PDF Pages collection
+ */
+export function addCurrentCanvasToPdf() {
+  if (!elements.canvas || !state.originalImage) {
+    alert('Pehle Left Workspace me photo upload karein ya yahan "+ Add Photos" button se chunein.');
+    return;
+  }
+
+  const dataUrl = elements.canvas.toDataURL('image/jpeg', 0.95);
+  const img = new Image();
+  img.onload = () => {
+    const baseName = state.loadedFile ? state.loadedFile.name.replace(/\.[^/.]+$/, '') : 'workspace_photo';
+    state.pdfPages.push({
+      id: 'page_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      name: `${baseName}_page.jpg`,
+      file: null,
+      dataUrl: dataUrl,
+      img: img,
+      width: img.naturalWidth || img.width,
+      height: img.naturalHeight || img.height,
+      sizeBytes: Math.round(dataUrl.length * 0.75)
+    });
+    renderPdfPagesList();
+  };
+  img.src = dataUrl;
+}
+
+/**
+ * Renders the visual page cards in Tab 3
+ */
+export function renderPdfPagesList() {
+  if (!elements.pdfPagesList) return;
+
+  const count = state.pdfPages.length;
+  if (elements.pdfPageCount) elements.pdfPageCount.textContent = count;
+
+  if (count === 0) {
+    elements.pdfPagesList.innerHTML = `
+      <div class="pdf-empty-state" id="pdfEmptyState">
+        <span>📄 Abhi koi page add nahi hai.<br>Upar button se Aadhaar Front/Back ya Marksheet add karein.</span>
+      </div>
+    `;
+    if (elements.clearAllPdfPagesBtn) elements.clearAllPdfPagesBtn.style.display = 'none';
+    if (elements.generatePdfBtn) {
+      elements.generatePdfBtn.disabled = !state.originalImage;
+    }
+    return;
+  }
+
+  if (elements.clearAllPdfPagesBtn) elements.clearAllPdfPagesBtn.style.display = 'inline-block';
+  if (elements.generatePdfBtn) elements.generatePdfBtn.disabled = false;
+
+  elements.pdfPagesList.innerHTML = '';
+
+  state.pdfPages.forEach((page, index) => {
+    const card = document.createElement('div');
+    card.className = 'pdf-page-card';
+    card.setAttribute('data-id', page.id);
+
+    const isFirst = index === 0;
+    const isLast = index === count - 1;
+
+    card.innerHTML = `
+      <span class="pdf-page-badge">P${index + 1}</span>
+      <img src="${page.dataUrl}" class="pdf-page-thumb" alt="Page ${index + 1}" />
+      <div class="pdf-page-details">
+        <span class="pdf-page-title" title="${page.name}">${page.name}</span>
+        <span class="pdf-page-meta">${page.width}×${page.height} px · ${formatBytes(page.sizeBytes)}</span>
+      </div>
+      <div class="pdf-page-actions">
+        <button type="button" class="pdf-page-action-btn btn-up" title="Move Up (Pehle layein)" ${isFirst ? 'disabled' : ''}>↑</button>
+        <button type="button" class="pdf-page-action-btn btn-down" title="Move Down (Baad me layein)" ${isLast ? 'disabled' : ''}>↓</button>
+        <button type="button" class="pdf-page-action-btn btn-remove" title="Remove Page">✕</button>
+      </div>
+    `;
+
+    card.querySelector('.btn-up')?.addEventListener('click', () => movePdfPage(index, -1));
+    card.querySelector('.btn-down')?.addEventListener('click', () => movePdfPage(index, 1));
+    card.querySelector('.btn-remove')?.addEventListener('click', () => removePdfPage(index));
+
+    elements.pdfPagesList.appendChild(card);
+  });
+}
+
+/**
+ * Reorder page up (-1) or down (+1)
+ */
+export function movePdfPage(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= state.pdfPages.length) return;
+  const temp = state.pdfPages[index];
+  state.pdfPages[index] = state.pdfPages[newIndex];
+  state.pdfPages[newIndex] = temp;
+  renderPdfPagesList();
+}
+
+/**
+ * Remove a specific page
+ */
+export function removePdfPage(index) {
+  state.pdfPages.splice(index, 1);
+  renderPdfPagesList();
+}
+
+/**
+ * Clear all PDF pages
+ */
+export function clearAllPdfPages() {
+  state.pdfPages = [];
+  renderPdfPagesList();
+}
+
+/**
+ * High-Performance Client-Side A4 PDF Compiler with Strict KB Guarantee
+ */
+export async function compileAndDownloadPdf() {
+  // If no explicit pages in list but main workspace has an image, auto-add it
+  if (state.pdfPages.length === 0 && state.originalImage && elements.canvas) {
+    addCurrentCanvasToPdf();
+    await new Promise((r) => setTimeout(r, 60));
+  }
+
+  if (state.pdfPages.length === 0) {
+    alert('Kripya kam se kam ek document photo (Aadhaar, Marksheet) add karein.');
+    return;
+  }
+
+  const btn = elements.generatePdfBtn;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span aria-hidden="true">⏳</span> Compiling PDF (&lt;${state.pdfTargetKb} KB)…`;
+  }
+
+  if (elements.pdfProgressBox) elements.pdfProgressBox.style.display = 'block';
+  if (elements.pdfSuccessNotice) elements.pdfSuccessNotice.style.display = 'none';
 
   try {
-    const { jsPDF } = window.jspdf || {};
-    const orient = (elements.pdfOrientation?.value === 'landscape') ? 'landscape' : 'portrait';
-
-    let targetQuality = 0.65;
-    const compressionLevel = parseInt(elements.pdfCompressionSlider?.value || '2', 10);
-    if (compressionLevel === 1) targetQuality = 0.45;
-    if (compressionLevel === 3) targetQuality = 0.85;
-
-    const imgDataUrl = elements.canvas.toDataURL('image/jpeg', targetQuality);
-
-    if (jsPDF) {
-      const doc = new jsPDF({
-        orientation: orient,
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
-
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 10;
-      const maxW = pageWidth - margin * 2;
-      const maxH = pageHeight - margin * 2;
-
-      const canvasAspect = elements.canvas.width / elements.canvas.height;
-      let imgW = maxW;
-      let imgH = imgW / canvasAspect;
-
-      if (imgH > maxH) {
-        imgH = maxH;
-        imgW = imgH * canvasAspect;
+    const result = await generateA4PdfFromImages(state.pdfPages, state.pdfTargetKb, {
+      orientation: state.pdfOrientation || 'portrait',
+      onProgress: (step, total, message) => {
+        const percent = Math.round((step / total) * 100);
+        if (elements.pdfProgressFill) elements.pdfProgressFill.style.width = `${percent}%`;
+        if (elements.pdfProgressText) elements.pdfProgressText.textContent = message;
       }
+    });
 
-      const posX = (pageWidth - imgW) / 2;
-      const posY = (pageHeight - imgH) / 2;
+    // Instant download
+    const filename = `biharfast_rtps_${state.pdfTargetKb}kb_${Date.now()}.pdf`;
+    downloadPdf(result.blob, filename);
 
-      doc.addImage(imgDataUrl, 'JPEG', posX, posY, imgW, imgH, undefined, 'FAST');
-      doc.save(`biharfast_rtps_${state.pdfTargetKb}kb.pdf`);
-    } else {
-      const a = document.createElement('a');
-      a.href = imgDataUrl;
-      a.download = 'biharfast_rtps_doc.jpg';
-      a.click();
+    // Show success feedback
+    if (elements.pdfSuccessNotice && elements.pdfSuccessNoticeText) {
+      elements.pdfSuccessNotice.style.display = 'flex';
+      elements.pdfSuccessNoticeText.innerHTML = `<strong>PDF Safaltapoorvak Download Hua!</strong> Final Size: <strong>${result.finalKB} KB</strong> (${result.pageCount} Pages, Strict &lt;${state.pdfTargetKb} KB).`;
     }
-  } catch (err) {
-    console.error('PDF error:', err);
-    alert('PDF generate karne me dikkat aayi. JPG download karein.');
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    alert('PDF generate karne me dikkat aayi: ' + error.message);
   } finally {
-    elements.generatePdfBtn.disabled = false;
-    elements.generatePdfBtn.innerHTML = '<span aria-hidden="true">📄</span> Generate RTPS PDF (<200 KB)';
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span aria-hidden="true">📄</span> Generate &amp; Download PDF (&lt;${state.pdfTargetKb} KB)`;
+    }
+    setTimeout(() => {
+      if (elements.pdfProgressBox) elements.pdfProgressBox.style.display = 'none';
+    }, 3000);
+  }
+}
+
+// ==========================================
+// PDF TO JPG EXTRACTOR METHODS (PDF.js)
+// ==========================================
+
+/**
+ * Switch Tab 3 submode between 'compiler' and 'extractor'
+ * @param {'compiler'|'extractor'} mode
+ */
+export function switchPdfMode(mode) {
+  state.pdfExtractorMode = mode;
+  if (mode === 'compiler') {
+    elements.pdfModeCompilerBtn?.classList.add('active');
+    elements.pdfModeExtractorBtn?.classList.remove('active');
+    if (elements.pdfCompilerSection) elements.pdfCompilerSection.style.display = 'block';
+    if (elements.pdfExtractorSection) elements.pdfExtractorSection.style.display = 'none';
+  } else {
+    elements.pdfModeCompilerBtn?.classList.remove('active');
+    elements.pdfModeExtractorBtn?.classList.add('active');
+    if (elements.pdfCompilerSection) elements.pdfCompilerSection.style.display = 'none';
+    if (elements.pdfExtractorSection) elements.pdfExtractorSection.style.display = 'block';
+  }
+}
+
+/**
+ * Handles incoming PDF file in Extractor mode: renders all pages with PDF.js
+ * @param {File} file
+ */
+export async function handlePdfExtractorFile(file) {
+  if (!file) return;
+
+  switchPdfMode('extractor');
+
+  if (elements.pdfExtractProgressBox) elements.pdfExtractProgressBox.style.display = 'block';
+  if (elements.pdfExtractProgressFill) elements.pdfExtractProgressFill.style.width = '10%';
+  if (elements.pdfExtractProgressText) elements.pdfExtractProgressText.textContent = `Loading ${truncateFilename(file.name)}…`;
+
+  try {
+    const scale = state.pdfRenderScale || 2.0;
+    const pages = await extractAllPdfPages(file, {
+      scale,
+      onProgress: (current, total, message) => {
+        const percent = total > 0 ? Math.round((current / total) * 100) : 10;
+        if (elements.pdfExtractProgressFill) elements.pdfExtractProgressFill.style.width = `${percent}%`;
+        if (elements.pdfExtractProgressText) elements.pdfExtractProgressText.textContent = message;
+      }
+    });
+
+    state.extractedPdfPages = pages;
+    renderExtractedPdfPagesList(file.name);
+
+    // If workspace doesn't have an active image yet, auto-load Page 1
+    if (pages.length > 0 && (!state.originalImage || !state.loadedFile || state.loadedFile.type === 'application/pdf')) {
+      sendExtractedPageToResizer(pages[0], file.name, false);
+    }
+  } catch (error) {
+    console.error('PDF extraction failed:', error);
+    alert('PDF pages extract karne me dikkat aayi: ' + error.message);
+  } finally {
+    setTimeout(() => {
+      if (elements.pdfExtractProgressBox) elements.pdfExtractProgressBox.style.display = 'none';
+    }, 1500);
+  }
+}
+
+/**
+ * Renders the visual page cards in the Extractor section
+ * @param {string} [pdfFileName='document.pdf']
+ */
+export function renderExtractedPdfPagesList(pdfFileName = 'document.pdf') {
+  if (!elements.pdfExtractedPagesList) return;
+
+  const count = state.extractedPdfPages.length;
+  if (elements.pdfExtractedCount) elements.pdfExtractedCount.textContent = count;
+
+  if (count === 0) {
+    elements.pdfExtractedPagesList.innerHTML = `
+      <div class="pdf-empty-state" id="pdfExtractEmptyState">
+        <span>📄 Abhi koi PDF load nahi hai.<br>Upar button se PDF Document upload karein.</span>
+      </div>
+    `;
+    if (elements.downloadAllPagesJpgBtn) elements.downloadAllPagesJpgBtn.style.display = 'none';
+    return;
+  }
+
+  if (elements.downloadAllPagesJpgBtn) elements.downloadAllPagesJpgBtn.style.display = 'inline-block';
+  elements.pdfExtractedPagesList.innerHTML = '';
+
+  const baseName = pdfFileName.replace(/\.[^/.]+$/, '');
+
+  state.extractedPdfPages.forEach((page) => {
+    const card = document.createElement('div');
+    card.className = 'pdf-extract-card';
+
+    // Thumbnail DataURL
+    const thumbUrl = page.toDataUrl(0.7);
+
+    card.innerHTML = `
+      <img src="${thumbUrl}" class="pdf-extract-thumb" alt="Page ${page.pageNumber}" />
+      <div class="pdf-extract-info">
+        <span class="pdf-extract-title">Page ${page.pageNumber}</span>
+        <span class="pdf-extract-meta">${page.width} × ${page.height} px · Crisp</span>
+      </div>
+      <div class="pdf-extract-actions">
+        <button type="button" class="aspect-btn btn-send-resizer" title="Send this page directly into KB Resizer">
+          ⚡ Send to Resizer
+        </button>
+        <button type="button" class="aspect-btn btn-download-jpg" title="Download this page as JPG">
+          ⬇ Download JPG
+        </button>
+      </div>
+    `;
+
+    card.querySelector('.btn-download-jpg')?.addEventListener('click', () => {
+      downloadCanvasAsJpg(page.canvas, `${baseName}_page_${page.pageNumber}.jpg`, 0.92);
+    });
+
+    card.querySelector('.btn-send-resizer')?.addEventListener('click', () => {
+      sendExtractedPageToResizer(page, pdfFileName, true);
+    });
+
+    elements.pdfExtractedPagesList.appendChild(card);
+  });
+}
+
+/**
+ * Sends an extracted PDF canvas page directly into the main workspace & KB Resizer Tab
+ * @param {Object} page Extracted page object
+ * @param {string} [pdfFileName='document.pdf'] Original PDF file name
+ * @param {boolean} [switchTab=true] Whether to auto-switch to Tab 1
+ */
+export function sendExtractedPageToResizer(page, pdfFileName = 'document.pdf', switchTab = true) {
+  if (!page || !page.canvas) return;
+
+  const baseName = pdfFileName.replace(/\.[^/.]+$/, '');
+  const dataUrl = page.toDataUrl(0.95);
+  const img = new Image();
+
+  img.onload = () => {
+    state.originalImage = img;
+    state.originalWidth = img.naturalWidth || img.width;
+    state.originalHeight = img.naturalHeight || img.height;
+    state.currentWidth = state.originalWidth;
+    state.currentHeight = state.originalHeight;
+    state.rotation = 0;
+    state.flipH = false;
+    state.cropRatio = 'free';
+
+    // Create a virtual File object for UI tags
+    state.loadedFile = {
+      name: `${baseName}_page_${page.pageNumber}.jpg`,
+      size: Math.round(dataUrl.length * 0.75),
+      type: 'image/jpeg'
+    };
+    state.originalSizeBytes = state.loadedFile.size;
+
+    updateBeforeReadout();
+
+    if (elements.dimWidth) elements.dimWidth.value = state.currentWidth;
+    if (elements.dimHeight) elements.dimHeight.value = state.currentHeight;
+
+    // Show workspace canvas
+    if (elements.dropzone) elements.dropzone.style.display = 'none';
+    if (elements.canvasWrapper) elements.canvasWrapper.style.display = 'block';
+    if (elements.workspaceCard) elements.workspaceCard.classList.add('has-file');
+
+    enableActionButtons(true);
+    renderAndCompress();
+
+    // Switch to Tab 1 (KB Resizer)
+    if (switchTab) {
+      const resizerTabBtn = document.querySelector('.tab-btn[data-target="pane-resizer"]');
+      if (resizerTabBtn) resizerTabBtn.click();
+
+      if (elements.targetStatusText) {
+        elements.targetStatusText.textContent = `✓ Page ${page.pageNumber} loaded! Ab ise 20-50 KB ya Passport Size crop karein.`;
+        elements.targetStatusText.style.color = 'var(--green)';
+      }
+    }
+  };
+
+  img.src = dataUrl;
+}
+
+/**
+ * Downloads all extracted pages sequentially as JPGs
+ */
+export async function downloadAllExtractedPagesJpg() {
+  if (!state.extractedPdfPages || state.extractedPdfPages.length === 0) return;
+
+  const baseName = state.loadedFile ? state.loadedFile.name.replace(/\.[^/.]+$/, '') : 'document';
+  for (let i = 0; i < state.extractedPdfPages.length; i++) {
+    const page = state.extractedPdfPages[i];
+    downloadCanvasAsJpg(page.canvas, `${baseName}_page_${page.pageNumber}.jpg`, 0.92);
+    // Pause 350ms between downloads to avoid browser popup blocks
+    await new Promise((r) => setTimeout(r, 350));
   }
 }
 
@@ -1385,5 +1819,17 @@ export default {
   downloadFile,
   resetStudio,
   updateStatusBadges,
+  addPdfFiles,
+  addCurrentCanvasToPdf,
+  renderPdfPagesList,
+  movePdfPage,
+  removePdfPage,
+  clearAllPdfPages,
+  compileAndDownloadPdf,
+  switchPdfMode,
+  handlePdfExtractorFile,
+  renderExtractedPdfPagesList,
+  sendExtractedPageToResizer,
+  downloadAllExtractedPagesJpg,
   initStudio
 };
