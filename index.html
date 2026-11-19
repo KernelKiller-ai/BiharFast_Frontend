@@ -273,8 +273,12 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('[BiharFast] Offline Service Worker registered:', reg.scope))
+        navigator.serviceWorker.register('./sw.js', { scope: '/' })
+          .catch(() => navigator.serviceWorker.register('/sw.js', { scope: '/' }))
+          .catch(() => navigator.serviceWorker.register('./sw.js'))
+          .then((reg) => {
+            if (reg) console.log('[BiharFast] Offline Service Worker registered:', reg.scope);
+          })
           .catch((err) => console.warn('[BiharFast] Service Worker registration failed:', err));
       });
     }

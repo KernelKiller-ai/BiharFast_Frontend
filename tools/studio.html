@@ -910,8 +910,12 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('../sw.js', { scope: '../' })
+        const swPath = window.location.pathname.includes('/tools/') ? '../sw.js' : './sw.js';
+        navigator.serviceWorker.register(swPath, { scope: '/' })
+          .catch(() => navigator.serviceWorker.register('/sw.js', { scope: '/' }))
+          .catch(() => navigator.serviceWorker.register(swPath))
           .then((reg) => {
+            if (!reg) return;
             console.log('[BiharFast Studio] Offline Service Worker registered:', reg.scope);
             const badge = document.getElementById('headerOfflineBadge');
             const text = document.getElementById('headerOfflineText');

@@ -6,13 +6,14 @@
  * work 100% offline without internet connection.
  */
 
-const CACHE_NAME = 'biharfast-studio-v1';
+const CACHE_NAME = 'biharfast-studio-v2';
 
 // Core assets to pre-cache on Service Worker installation
-const PRECACHE_ASSETS = [
+const ASSETS = [
   './',
   './index.html',
   './tools/studio.html',
+  './tools/studio',
   './assets/css/style.css',
   './assets/css/studio.css',
   './assets/js/main.js',
@@ -27,34 +28,34 @@ const PRECACHE_ASSETS = [
 ];
 
 // Install Event: Pre-cache all essential studio tools and offline libraries
+// Using Promise.allSettled so a single failed asset path never breaks Service Worker installation
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Add all core assets, silently handling any individual missing optional files
       return Promise.allSettled(
-        PRECACHE_ASSETS.map((assetUrl) => {
-          return cache.add(new Request(assetUrl, { cache: 'reload' })).catch((err) => {
-            console.warn(`[BiharFast SW] Precache skipped for ${assetUrl}:`, err);
+        ASSETS.map((url) => {
+          return cache.add(url).catch((err) => {
+            console.warn(`[BiharFast SW] Failed to cache: ${url}`, err);
           });
         })
       );
     }).then(() => {
-      // Activate immediately without waiting for previous tabs to close
+      // Activate immediately without waiting for existing tabs to close
       return self.skipWaiting();
     })
   );
 });
 
-// Activate Event: Clear outdated cache versions and claim clients
+// Activate Event: Delete all older caches and claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => {
-            console.log(`[BiharFast SW] Removing legacy cache: ${name}`);
-            return caches.delete(name);
+          .filter((cacheName) => cacheName !== CACHE_NAME)
+          .map((cacheName) => {
+            console.log(`[BiharFast SW] Deleting older cache: ${cacheName}`);
+            return caches.delete(cacheName);
           })
       );
     }).then(() => {
@@ -64,44 +65,51 @@ self.addEventListener('activate', (event) => {
 });
 
 // Fetch Event: Cache-First Strategy with Background Cache Updates
+// Only intercept same-origin GET requests; wrap in a fallback so respondWith() NEVER causes ERR_FAILED
 self.addEventListener('fetch', (event) => {
-  // Only handle GET HTTP(S) requests
+  // Only intercept same-origin GET requests
   if (event.request.method !== 'GET') return;
 
-  const url = new URL(event.request.url);
-  if (!url.protocol.startsWith('http')) return;
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return instantly from cache (Cache-First)
-        return cachedResponse;
-      }
+    caches.match(event.request, { ignoreSearch: true })
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          // Return instantly from cache (Cache-First)
+          return cachedResponse;
+        }
 
-      // If not in cache, fetch from network and cache it dynamically
-      return fetch(event.request)
-        .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200) {
-            return networkResponse;
+        // If not in cache, fetch from network and dynamically cache valid response
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
           }
-
-          // Cache clones of valid responses
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-
           return networkResponse;
-        })
-        .catch(() => {
-          // Offline fallback for navigation requests
-          if (event.request.mode === 'navigate') {
-            if (url.pathname.includes('/tools/') || url.pathname.includes('studio')) {
-              return caches.match('./tools/studio.html') || caches.match('/tools/studio.html');
-            }
-            return caches.match('./index.html') || caches.match('/index.html');
-          }
         });
-    })
+      })
+      .catch(() => {
+        // Fallback to direct network fetch if cache matching fails
+        return fetch(event.request);
+      })
+      .catch(() => {
+        // If both cache and network fail (completely offline)
+        if (event.request.mode === 'navigate') {
+          if (requestUrl.pathname.includes('/tools/') || requestUrl.pathname.includes('studio')) {
+            return caches.match('/tools/studio.html')
+              .then((res) => res || caches.match('./tools/studio.html'))
+              .then((res) => res || caches.match('/tools/studio'));
+          }
+          return caches.match('/index.html')
+            .then((res) => res || caches.match('./index.html'))
+            .then((res) => res || caches.match('/'));
+        }
+        // Fallback Response instead of rejecting to prevent Chrome ERR_FAILED
+        return new Response('Offline', { status: 503, statusText: 'Offline' });
+      })
   );
 });
