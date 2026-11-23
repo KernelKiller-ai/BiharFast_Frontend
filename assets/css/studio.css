@@ -1645,3 +1645,229 @@
     font-size: 0.72rem;
   }
 }
+
+/* ==========================================================================
+   Cornerstone SEO Tool Guide Sections (Cheat-Sheets, Steps, Fixes, FAQs, Related)
+   ========================================================================== */
+.studio-guide-section {
+  padding-block: 48px 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 40px;
+}
+
+.guide-block {
+  margin-bottom: 40px;
+}
+
+.guide-heading {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #f1f5fb;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guide-lead {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* Cheat Sheet Table */
+.spec-table-container {
+  overflow-x: auto;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 14px;
+  background: rgba(16, 26, 43, 0.6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+.spec-table th {
+  background: rgba(15, 23, 42, 0.9);
+  color: #f1f5fb;
+  font-weight: 750;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+  white-space: nowrap;
+}
+
+.spec-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+}
+
+.spec-table tr:last-child td {
+  border-bottom: none;
+}
+
+.spec-table tr:hover td {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.table-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--green);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.table-tag.blue {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--cyan);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+/* Steps Grid */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.step-card {
+  background: rgba(16, 26, 43, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 18px 16px;
+  position: relative;
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--cyan);
+  font-weight: 800;
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.step-card h4 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #f1f5fb;
+  margin-bottom: 6px;
+}
+
+.step-card p {
+  font-size: 0.84rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Rejection Fixes Grid */
+.fixes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.fix-card {
+  background: rgba(16, 26, 43, 0.65);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  border-radius: 12px;
+  padding: 18px 16px;
+}
+
+.fix-card.solved {
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.fix-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.94rem;
+  font-weight: 750;
+  color: #fb7185;
+  margin-bottom: 8px;
+}
+
+.fix-card.solved .fix-title {
+  color: var(--green);
+}
+
+.fix-text {
+  font-size: 0.84rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Related Tools Bar */
+.related-tools-box {
+  background: linear-gradient(145deg, rgba(16, 26, 43, 0.7), rgba(9, 13, 22, 0.9));
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 16px;
+  padding: 24px 20px;
+  margin-top: 40px;
+}
+
+.related-tools-header {
+  margin-bottom: 16px;
+}
+
+.related-tools-header h3 {
+  font-size: 1.15rem;
+  font-weight: 750;
+  color: #f1f5fb;
+  margin: 0 0 4px;
+}
+
+.related-tools-header p {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.related-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.related-tool-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #e2e8f0;
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 650;
+  transition: all 0.2s ease;
+}
+
+.related-tool-pill:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: var(--cyan);
+  transform: translateY(-2px);
+}
+
+.related-tool-icon {
+  font-size: 1rem;
+}

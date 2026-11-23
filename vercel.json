@@ -16,7 +16,7 @@
       ]
     },
     {
-      "source": "/tools/studio.html",
+      "source": "/tools/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

@@ -49,6 +49,39 @@ export function getTodayDateFormatted() {
 
 // Predefined 1-Click Exam & Sarkari Portal Specifications
 export const EXAM_PRESETS = {
+  'us-passport': {
+    name: 'US Passport / Visa (2×2 in / 600×600)',
+    width: 600,
+    height: 600,
+    minKB: 20,
+    maxKB: 240,
+    mimeType: 'image/jpeg',
+    enableNameDate: false,
+    cropRatio: '1:1',
+    filenamePrefix: 'us_passport_photo'
+  },
+  'uk-eu-passport': {
+    name: 'UK / EU / Schengen (35×45 mm)',
+    width: 413,
+    height: 531,
+    minKB: 20,
+    maxKB: 150,
+    mimeType: 'image/jpeg',
+    enableNameDate: false,
+    cropRatio: '3.5:4.5',
+    filenamePrefix: 'uk_eu_passport_photo'
+  },
+  'ssc-upsc': {
+    name: 'SSC / UPSC / Railway (20-50 KB)',
+    width: 350,
+    height: 450,
+    minKB: 20,
+    maxKB: 50,
+    mimeType: 'image/jpeg',
+    enableNameDate: false,
+    cropRatio: '3.5:4.5',
+    filenamePrefix: 'ssc_upsc_railway_photo'
+  },
   'bpsc-photo': {
     name: 'BPSC / BSSC / RRB Photo',
     width: 200,
@@ -748,16 +781,22 @@ export function updateStatusBadges() {
   }
   if (elements.portalBadgeText) {
     const key = state.activePresetKey || '';
-    if (key.startsWith('bpsc')) {
+    if (key === 'us-passport') {
+      elements.portalBadgeText.textContent = 'Ready for US Visa / Passport';
+    } else if (key === 'uk-eu-passport') {
+      elements.portalBadgeText.textContent = 'Ready for UK / EU Passport';
+    } else if (key === 'ssc-upsc') {
+      elements.portalBadgeText.textContent = 'Ready for SSC / UPSC / Exam';
+    } else if (key.startsWith('bpsc')) {
       elements.portalBadgeText.textContent = 'Ready for BPSC / BSSC';
     } else if (key.startsWith('pan')) {
       elements.portalBadgeText.textContent = 'Ready for PAN Card';
     } else if (key.startsWith('csbc')) {
       elements.portalBadgeText.textContent = 'Ready for CSBC Police';
     } else if (key.startsWith('rtps')) {
-      elements.portalBadgeText.textContent = 'Ready for RTPS Bihar';
+      elements.portalBadgeText.textContent = 'Ready for RTPS / Govt';
     } else {
-      elements.portalBadgeText.textContent = 'Ready for Exam Portal';
+      elements.portalBadgeText.textContent = 'Ready for Portal / Form';
     }
   }
 }
@@ -932,6 +971,15 @@ export function initStudio() {
       if (targetPane) targetPane.classList.add('active');
     });
   });
+
+  // URL Hash support (e.g. #pane-pdf, #pane-namedate, #pane-touchup)
+  if (window.location.hash) {
+    const hashPane = window.location.hash.replace('#', '');
+    const hashBtn = document.querySelector(`.tab-btn[data-target="${hashPane}"]`);
+    if (hashBtn) {
+      setTimeout(() => hashBtn.click(), 50);
+    }
+  }
 
   // Drag and Drop
   if (elements.dropzone) {
