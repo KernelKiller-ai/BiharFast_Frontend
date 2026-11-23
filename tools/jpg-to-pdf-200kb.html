@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d16">
+  <meta name="description" content="Convert JPG & PNG images into PDF under 200KB, 150KB or 100KB offline in your browser. Merge Aadhaar, marksheet & certificates securely without server uploads.">
+  <meta name="keywords" content="jpg to pdf 200kb, convert photo to pdf under 200kb, rtps bihar pdf 200kb, aadhaar front back pdf merge, compress pdf to 200kb online, image to pdf converter free no upload">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BF Studio by BiharFast">
+  <meta property="og:title" content="JPG to PDF Under 200KB Converter (Free Offline Document Merge)">
+  <meta property="og:description" content="Convert JPG & PNG images into PDF under 200KB, 150KB or 100KB offline in your browser. Merge Aadhaar, marksheet & certificates securely without server uploads.">
+  <meta property="og:url" content="https://www.biharfast.in/tools/jpg-to-pdf-200kb.html">
+  <meta property="og:image" content="https://www.biharfast.in/assets/img/og-banner.png">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="JPG to PDF Under 200KB Converter (Free Offline Document Merge)">
+  <meta name="twitter:description" content="Convert JPG & PNG images into PDF under 200KB, 150KB or 100KB offline in your browser. Merge Aadhaar, marksheet & certificates securely without server uploads.">
+  <meta name="twitter:image" content="https://www.biharfast.in/assets/img/og-banner.png">
+
+  <title>JPG to PDF Under 200KB Converter (Free Offline Document Merge)</title>
+  <link rel="canonical" href="https://www.biharfast.in/tools/jpg-to-pdf-200kb.html">
+  <link rel="icon" type="image/png" href="../assets/img/logo.png">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/studio.css">
+  <script src="../assets/js/main.js" defer></script>
+  <!-- BiharFast KB Engine (Pure Client-Side ES Module) -->
+  <script type="module" src="../assets/js/kb-engine.js"></script>
+  <!-- pdf-lib (Local bundle with fallback) for high-performance multi-page PDF compilation -->
+  <script src="../assets/js/pdf-lib.min.js"></script>
+  <!-- PDF.js (Local bundle with fallback) for rendering local PDFs to HTML5 Canvas -->
+  <script src="../assets/js/pdf.min.js"></script>
+  <!-- BiharFast PDF Engine (Client-Side Multi-Page ES Module) -->
+  <script type="module" src="../assets/js/pdf-engine.js"></script>
+  <!-- jsPDF for fallback -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Schema.org SoftwareApplication & FAQPage Structured Data (Cleaned, No aggregateRating) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "BF Studio - JPG to PDF Under 200KB",
+        "url": "https://www.biharfast.in/tools/jpg-to-pdf-200kb.html",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "All",
+        "description": "Merge document images into multi-page PDFs strictly under 100KB, 150KB, or 200KB with client-side compression and zero cloud uploads.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How does BF Studio process files privately without uploading?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "All processing happens 100% inside your browser using HTML5 Canvas, WebAssembly, and pdf-lib. Your confidential documents and photos are never uploaded to any cloud server."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does this tool work offline without internet?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, BF Studio is pre-cached with a Service Worker. Once opened, you can disconnect from the internet and continue compressing images, generating passport photos, or creating PDFs."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body class="studio-page">
+  <!-- Shared Sticky Navigation Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html" aria-label="BF Studio home">
+        <span class="brand-mark">
+          <svg data-image-fallback="brand" viewBox="0 0 32 32" aria-hidden="true"><path fill="#04221d" d="M8 6h9.1c4.4 0 7 2.2 7 5.8 0 2-1 3.5-2.8 4.3 2.6.7 4.1 2.5 4.1 5.1 0 4-2.9 6.8-7.8 6.8H8V6Zm5 4.2v4.2h4.2c1.5 0 2.3-.7 2.3-2.1s-.8-2.1-2.3-2.1H13Zm0 8.3v5.1h4.8c1.7 0 2.7-.9 2.7-2.5s-1-2.6-2.7-2.6H13Z"/></svg>
+          <img class="brand-logo-image" src="../assets/img/logo.png" alt="" data-optional-image="brand" hidden>
+        </span>
+        <span class="brand-text">BF<span class="brand-name-accent">Studio</span><small class="brand-in"> by BiharFast</small></span>
+      </a>
+
+      <!-- 100% Offline Ready Header Badge -->
+      <div class="header-offline-pill" id="headerOfflineBadge" title="BF Studio is 100% cached &amp; works offline without internet">
+        <span class="offline-pulse-dot"></span>
+        <span class="offline-text" id="headerOfflineText">Offline Ready</span>
+      </div>
+
+      <button class="mobile-menu-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="primary-nav" data-menu-toggle>
+        <span class="menu-icon" aria-hidden="true"></span>
+      </button>
+      <nav class="primary-nav" id="primary-nav" aria-label="Main navigation" data-primary-nav>
+        <a href="../index.html">Home</a>
+        <a href="studio.html" style="color: var(--cyan); font-weight: 750;">Studio (Tools)</a>
+        <a href="../index.html#mission">Mission</a>
+        <a class="nav-cta" href="../index.html#idea-form">Idea Box <span aria-hidden="true">↗</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Studio Hero Title -->
+    <section class="studio-hero page-width">
+      <div class="studio-badge">
+        <span class="badge-dot"></span>
+        <span>100% CLIENT-SIDE • ZERO SERVER UPLOADS • WORKS OFFLINE</span>
+      </div>
+      <h1>Convert JPG to PDF <span class="text-gradient">Under 200KB</span> Online</h1>
+      <p>Combine document scans, Aadhaar cards, and marksheets into compact, high-clarity A4 PDFs strictly under 100KB, 150KB, or 200KB. Powered by client-side WebAssembly &amp; pdf-lib.</p>
+      
+      <!-- Mobile-First Hindi / Hinglish Status Badges -->
+      <div class="studio-status-strip" aria-label="Sarkari Status Badges">
+        <span class="status-badge badge-bpsc" id="portalBadge">
+          <span class="badge-dot-green"></span>
+          <span id="portalBadgeText">Ready for BPSC</span>
+        </span>
+        <span class="status-badge badge-limit" id="limitBadge">
+          <span class="badge-icon">⚡</span>
+          <span id="limitBadgeText">Under 50 KB</span>
+        </span>
+        <span class="status-badge badge-offline" id="statusBadgeOffline">
+          <span class="badge-icon">🔒</span>
+          <span id="statusBadgeOfflineText">100% Offline - No Upload</span>
+        </span>
+      </div>
+    </section>
+
+    <!-- Interactive 2-Column Studio Workspace -->
+    <section class="studio-workspace-container" aria-label="Photoshop Studio Workspace">
+      <div class="studio-grid">
+        
+        <!-- Left Column: Live Preview Canvas & Dropzone -->
+        <div class="workspace-card" id="workspaceCard">
+          
+          <!-- Top Tool Bar with Resolution, Meta & View Controls -->
+          <div class="workspace-topbar">
+            <div class="file-info-tags">
+              <span class="info-chip" id="fileNameTag">File: <strong>Chunein</strong></span>
+              <span class="info-chip badge-green" id="originalMetaTag">Original: <strong>0 × 0 px (0 KB)</strong></span>
+              <span class="info-chip badge-cyan" id="outputMetaTag">Output: <strong>0 × 0 px</strong></span>
+            </div>
+
+            <div class="viewport-controls">
+              <button class="icon-btn" id="zoomOutBtn" title="Zoom Out" aria-label="Zoom Out" disabled>−</button>
+              <span class="info-chip" id="zoomLevelTag">100%</span>
+              <button class="icon-btn" id="zoomInBtn" title="Zoom In" aria-label="Zoom In" disabled>+</button>
+              <button class="icon-btn" id="rotateBtn" title="Rotate 90° Clockwise" aria-label="Rotate 90 degrees" disabled>↻</button>
+              <button class="icon-btn" id="flipHBtn" title="Flip Horizontal (Mirror)" aria-label="Flip Horizontal" disabled>⇄</button>
+              <button class="icon-btn" id="resetZoomBtn" title="Fit to Screen" aria-label="Reset View" disabled>⛶</button>
+            </div>
+          </div>
+
+          <!-- Canvas Viewport -->
+          <div class="canvas-viewport" id="canvasViewport">
+            <!-- Dropzone Overlay (Visible when no image is loaded) -->
+            <div class="dropzone-overlay" id="dropzone" role="button" tabindex="0" aria-label="Photo ya Document upload karein">
+              <div class="dropzone-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <h2 class="dropzone-title">Photo, Signature ya Document Yahan Drag Karein</h2>
+              <p class="dropzone-subtitle">Ya apne device se select karne ke liye click karein</p>
+              <div class="dropzone-badge-list">
+                <span class="format-pill">JPG / JPEG</span>
+                <span class="format-pill">PNG</span>
+                <span class="format-pill">WEBP</span>
+                <span class="format-pill">PDF Document</span>
+              </div>
+              <input type="file" id="fileInput" class="visually-hidden" accept="image/jpeg,image/png,image/webp,application/pdf">
+            </div>
+
+            <!-- Canvas Wrapper (Rendered when file is active) -->
+            <div class="canvas-wrapper" id="canvasWrapper">
+              <canvas id="studioCanvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Bottom Status & Action Bar -->
+          <div class="workspace-bottombar">
+            <div class="output-meta">
+              <span>Estimated Output:</span>
+              <span class="output-size-pill" id="outputSizePill">0 KB</span>
+              <span id="targetStatusText" style="color: var(--muted); font-size: 0.8rem;">Ready</span>
+            </div>
+
+            <div class="bottom-action-buttons">
+              <button class="btn-secondary" id="clearBtn" disabled>
+                <span aria-hidden="true">✕</span> Reset All
+              </button>
+              <button class="btn-primary" id="downloadBtn" disabled>
+                <span aria-hidden="true">↓</span> Download File
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Tabbed Control Panel -->
+        <div class="controls-card" id="controlsCard">
+          
+          <!-- Navigation Tabs -->
+          <div class="tabs-nav" role="tablist" aria-label="Studio Tools Tabs">
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="pane-resizer" id="tab-resizer" data-target="pane-resizer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+              <span>KB Resizer</span>
+            </button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="pane-namedate" id="tab-namedate" data-target="pane-namedate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>Name & Date</span>
+            </button>
+            <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="pane-pdf" id="tab-pdf" data-target="pane-pdf">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <span>PDF 200KB</span>
+            </button>
+            <button class="tab-btn" role="tab" aria-selected="false" aria-controls="pane-touchup" id="tab-touchup" data-target="pane-touchup">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <span>Touch-Up</span>
+            </button>
+          </div>
+
+          <!-- Tabs Content Body -->
+          <div class="tab-content">
+            
+            <!-- TAB 1: KB Resizer -->
+            <div class="tab-pane" id="pane-resizer" role="tabpanel" aria-labelledby="tab-resizer">
+              
+              <div class="control-section">
+                <span class="control-label">1-Click Global &amp; Exam Presets</span>
+                <div class="presets-grid" id="examPresetsGrid">
+                  <button type="button" class="preset-chip active" data-preset="bpsc-photo">BPSC / BSSC Photo (200×230, 20-50 KB)</button>
+                  <button type="button" class="preset-chip" data-preset="us-passport">US Passport 2x2 inch / 600x600 px</button>
+                  <button type="button" class="preset-chip" data-preset="uk-eu-passport">UK / EU Schengen 35x45 mm</button>
+                  <button type="button" class="preset-chip" data-preset="pan-photo">PAN Card 213x213 px / 20KB</button>
+                  <button type="button" class="preset-chip" data-preset="ssc-upsc">SSC / UPSC / Railway 20-50KB</button>
+                  <button type="button" class="preset-chip" data-preset="bpsc-sign">Signature (140×60, 10-20 KB)</button>
+                  <button type="button" class="preset-chip" data-preset="rtps-voter">RTPS / Voter ID (&lt;50 KB)</button>
+                  <button type="button" class="preset-chip" data-preset="csbc-photo">Police / DOP (50 KB + Strip)</button>
+                  <button type="button" class="preset-chip" data-preset="pan-sign">PAN Sign (400×200)</button>
+                  <button type="button" class="preset-chip" data-preset="custom">Custom Min/Max KB</button>
+                </div>
+              </div>
+
+              <div class="control-section">
+                <div class="control-label">
+                  <span>Target File Size Range (Min - Max KB)</span>
+                  <span class="val-tag" id="targetKbRangeDisplay">20 KB - 50 KB</span>
+                </div>
+                <div class="input-row">
+                  <div>
+                    <label class="field-sublabel" for="minKbInput">Min KB (Sarkari Portal Minimum)</label>
+                    <input type="number" class="input-text" id="minKbInput" min="5" max="2000" value="20">
+                  </div>
+                  <div>
+                    <label class="field-sublabel" for="maxKbInput">Max KB (Portal Limit)</label>
+                    <input type="number" class="input-text" id="maxKbInput" min="5" max="2000" value="50">
+                  </div>
+                </div>
+                <div class="slider-container">
+                  <input type="range" class="custom-range" id="maxKbSlider" min="10" max="500" step="5" value="50">
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--muted); margin-top:4px;">
+                  <span>10 KB (Sign Min)</span>
+                  <span>20 - 50 KB (Photo Standard)</span>
+                  <span>200 KB (RTPS Max)</span>
+                  <span>500 KB</span>
+                </div>
+              </div>
+
+              <div class="control-section">
+                <span class="control-label">Dimensions (Pixels)</span>
+                <div class="input-row">
+                  <div>
+                    <label class="field-sublabel" for="dimWidth">Width (px)</label>
+                    <input type="number" class="input-text" id="dimWidth" placeholder="e.g. 350">
+                  </div>
+                  <div>
+                    <label class="field-sublabel" for="dimHeight">Height (px)</label>
+                    <input type="number" class="input-text" id="dimHeight" placeholder="e.g. 450">
+                  </div>
+                </div>
+                <div class="toggle-row">
+                  <span style="font-size:0.82rem; color:var(--muted);">Lock Aspect Ratio (Anupat)</span>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="lockAspectCheckbox" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="control-section">
+                <span class="control-label">Output Format</span>
+                <select class="input-select" id="formatSelect">
+                  <option value="image/jpeg" selected>JPG / JPEG (Sarkari Form Standard)</option>
+                  <option value="image/png">PNG (Clean & Lossless)</option>
+                  <option value="image/webp">WEBP (Modern Compressed)</option>
+                </select>
+              </div>
+
+              <div class="tab-alert success">
+                <span aria-hidden="true">✦</span>
+                <span>BiharFast Smart Engine canvas quality aur dimension ko automatically calculate karke exact target KB me fit karta hai.</span>
+              </div>
+            </div>
+
+            <!-- TAB 2: Name & Date (DOPO) -->
+            <div class="tab-pane" id="pane-namedate" role="tabpanel" aria-labelledby="tab-namedate">
+              <div class="tab-alert">
+                <span aria-hidden="true">ℹ</span>
+                <span>BPSC, Bihar Police aur SSC form me photo par candidate ka <strong>Name</strong> aur <strong>Date of Photo (DOP)</strong> likhna zaroori hota hai.</span>
+              </div>
+
+              <div class="control-section">
+                <div class="toggle-row" style="border:none; padding-top:0;">
+                  <span style="font-size:0.88rem; font-weight:700; color:var(--ink);">Enable Name &amp; Date Strip</span>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="enableNameDateToggle" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="control-section" id="nameDateControlsContainer">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <label class="field-sublabel" for="candidateNameInput" style="margin:0;">Line 1: Candidate Full Name</label>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <label for="nameUppercaseToggle" style="font-size:0.74rem; color:var(--muted); cursor:pointer;">Auto-UPPERCASE</label>
+                    <input type="checkbox" id="nameUppercaseToggle" checked style="cursor:pointer;">
+                  </div>
+                </div>
+                <input type="text" class="input-text" id="candidateNameInput" placeholder="e.g. RAHUL KUMAR" value="ANURAG KUMAR" style="margin-bottom:12px;">
+
+                <div class="input-row">
+                  <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                      <label class="field-sublabel" for="photoDateInput" style="margin:0;">Line 2: Date of Photo (DD-MM-YYYY)</label>
+                      <button type="button" id="todayDateBtn" style="background:none; border:none; padding:0; color:var(--cyan); font-size:0.72rem; cursor:pointer; text-decoration:underline;">Today</button>
+                    </div>
+                    <input type="text" class="input-text" id="photoDateInput" placeholder="DD-MM-YYYY" value="19-11-2026">
+                  </div>
+                  <div>
+                    <label class="field-sublabel" for="stripModeSelect">White Strip Placement</label>
+                    <select class="input-select" id="stripModeSelect">
+                      <option value="append" selected>Append Below (18% Height)</option>
+                      <option value="overlay">Overlay on Bottom Frame</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="control-section">
+                  <div class="control-label">
+                    <span>Crisp White Strip Height</span>
+                    <span class="val-tag" id="stripHeightDisplay">18%</span>
+                  </div>
+                  <input type="range" class="custom-range" id="stripHeightSlider" min="12" max="28" value="18">
+                </div>
+
+                <div class="control-section" style="margin-top:16px;">
+                  <button type="button" class="btn-primary" id="downloadNameDatePhotoBtn" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 0.94rem;">
+                    <span aria-hidden="true">⚡</span> Download 20-50 KB Ready JPG
+                  </button>
+                  <p style="margin: 8px 0 0; font-size: 0.74rem; color: var(--muted); text-align: center;">
+                    Piped through kb-engine: strictly compliant 20 - 50 KB JPG for BPSC, CSBC &amp; SSC.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: PDF 200KB & PDF to JPG Studio -->
+            <div class="tab-pane active" id="pane-pdf" role="tabpanel" aria-labelledby="tab-pdf">
+              
+              <!-- Submode Switcher: Photos to PDF vs PDF to JPG -->
+              <div class="pdf-mode-switcher" id="pdfModeSwitcher" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+                <button type="button" class="aspect-btn active" id="pdfModeCompilerBtn" style="padding: 10px 6px; font-weight: 750;">
+                  📑 Photos to PDF (&lt;200 KB)
+                </button>
+                <button type="button" class="aspect-btn" id="pdfModeExtractorBtn" style="padding: 10px 6px; font-weight: 750;">
+                  🖼️ PDF to JPG (Extract)
+                </button>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- SUB-MODE 1: Photos to PDF Compiler (<200 KB)   -->
+              <!-- ============================================== -->
+              <div id="pdfCompilerSection">
+                <div class="tab-alert warning">
+                  <span aria-hidden="true">⚡</span>
+                  <span><strong>Bihar RTPS &amp; BPSC Portal Special:</strong> Aadhaar Front/Back aur Marksheet ko strictly <strong>100 KB / 150 KB / 200 KB PDF</strong> me compile karein.</span>
+                </div>
+
+                <!-- Target PDF Limit Selector -->
+                <div class="control-section">
+                  <span class="control-label">Target PDF Size Limit</span>
+                  <div class="presets-grid" id="pdfPresetGrid">
+                    <button type="button" class="preset-chip active" data-pdfkb="200">RTPS &lt;200 KB</button>
+                    <button type="button" class="preset-chip" data-pdfkb="150">Medium &lt;150 KB</button>
+                    <button type="button" class="preset-chip" data-pdfkb="100">BPSC &lt;100 KB</button>
+                    <button type="button" class="preset-chip" data-pdfkb="300">Standard 300 KB</button>
+                  </div>
+                </div>
+
+                <!-- Document Photos Multi-Upload & Page Manager -->
+                <div class="control-section">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span class="control-label" style="margin-bottom:0;">Document Pages (Photos)</span>
+                    <button type="button" class="aspect-btn" id="clearAllPdfPagesBtn" style="font-size:0.7rem; padding:3px 8px; color:var(--amber); display:none;">Clear All</button>
+                  </div>
+
+                  <input type="file" id="pdfMultiFileInput" accept="image/jpeg,image/png,image/webp" multiple class="visually-hidden">
+                  
+                  <button type="button" class="btn-secondary" id="addPdfPageBtn" style="width: 100%; justify-content: center; gap: 8px; margin-bottom: 6px;">
+                    <span aria-hidden="true">📁</span> + Add Photos (Aadhaar Front/Back, Marksheet)
+                  </button>
+
+                  <button type="button" class="aspect-btn" id="addCurrentCanvasToPdfBtn" style="width: 100%; justify-content: center; margin-bottom: 12px; font-size: 0.74rem;">
+                    📷 Current Workspace Photo ko Page banayein
+                  </button>
+
+                  <!-- Visual Page Cards Container -->
+                  <div class="pdf-pages-list" id="pdfPagesList">
+                    <div class="pdf-empty-state" id="pdfEmptyState">
+                      <span>📄 Abhi koi page add nahi hai.<br>Upar button se Aadhaar Front/Back ya Marksheet add karein.</span>
+                    </div>
+                  </div>
+
+                  <!-- Page Summary Info Strip -->
+                  <div class="pdf-summary-strip" id="pdfSummaryStrip" style="margin-top: 8px; font-size: 0.74rem; color: var(--muted); display: flex; justify-content: space-between;">
+                    <span>Pages: <strong id="pdfPageCount" style="color:var(--ink);">0</strong></span>
+                    <span>Target Limit: <strong id="pdfTargetLimitTag" style="color: var(--cyan);">Strict &lt;200 KB</strong></span>
+                  </div>
+                </div>
+
+                <!-- Page Orientation -->
+                <div class="control-section">
+                  <span class="control-label">PDF Page Orientation</span>
+                  <select class="input-select" id="pdfOrientation">
+                    <option value="portrait" selected>Portrait (Standard Aadhaar / Marksheet)</option>
+                    <option value="landscape">Landscape (Horizontal Document)</option>
+                    <option value="auto">Auto Detect according to Photo</option>
+                  </select>
+                </div>
+
+                <!-- Dynamic Progress Indicator (Visible during generation) -->
+                <div class="pdf-progress-box" id="pdfProgressBox" style="display: none; margin: 14px 0;">
+                  <div class="pdf-progress-bar">
+                    <div class="pdf-progress-fill" id="pdfProgressFill" style="width: 0%;"></div>
+                  </div>
+                  <div class="pdf-progress-text" id="pdfProgressText" style="font-size: 0.75rem; color: var(--cyan); margin-top: 6px; text-align: center;">Compressing pages…</div>
+                </div>
+
+                <!-- Generate Button -->
+                <div class="control-section">
+                  <button type="button" class="btn-primary" id="generatePdfBtn" style="width: 100%; justify-content: center;" disabled>
+                    <span aria-hidden="true">📄</span> Generate &amp; Download PDF (&lt;200 KB)
+                  </button>
+                </div>
+
+                <!-- Success / Ready Status Notice -->
+                <div class="tab-alert success" id="pdfSuccessNotice" style="display: none; margin-top: 10px;">
+                  <span aria-hidden="true">✓</span>
+                  <span id="pdfSuccessNoticeText">PDF ready!</span>
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- SUB-MODE 2: PDF to JPG Extractor (PDF.js)      -->
+              <!-- ============================================== -->
+              <div id="pdfExtractorSection" style="display: none;">
+                <div class="tab-alert warning">
+                  <span aria-hidden="true">💡</span>
+                  <span><strong>e-Aadhaar &amp; Certificate Extractor:</strong> Kisi bhi local PDF ke pages ko high-quality JPG me convert karein aur sidhe KB Resizer me bhej kar 20-50 KB banayein.</span>
+                </div>
+
+                <!-- Upload Local PDF File -->
+                <div class="control-section">
+                  <span class="control-label">Upload Local PDF Document</span>
+                  <input type="file" id="pdfExtractorFileInput" accept="application/pdf" class="visually-hidden">
+                  
+                  <button type="button" class="btn-primary" id="selectPdfForExtractBtn" style="width: 100%; justify-content: center; gap: 8px; padding: 12px 16px;">
+                    <span aria-hidden="true">📂</span> Chunein PDF Document (e-Aadhaar, Marksheet)
+                  </button>
+
+                  <p class="field-sublabel" style="margin-top: 6px; font-size: 0.72rem; line-height: 1.4;">
+                    100% Offline: PDF file client-side browser me hi canvas par render hoti hai. Koi data bahar nahi jata.
+                  </p>
+                </div>
+
+                <!-- Render Scale Selector -->
+                <div class="control-section">
+                  <span class="control-label">Render Resolution (Quality)</span>
+                  <select class="input-select" id="pdfRenderScaleSelect">
+                    <option value="1.5">Standard (1.5× Scale - Tez Rendering)</option>
+                    <option value="2.0" selected>High Resolution (2.0× Scale - Crisp Text)</option>
+                    <option value="3.0">Ultra HD (3.0× Scale - Marksheet Print)</option>
+                  </select>
+                </div>
+
+                <!-- Extractor Progress Indicator -->
+                <div class="pdf-progress-box" id="pdfExtractProgressBox" style="display: none; margin: 12px 0;">
+                  <div class="pdf-progress-bar">
+                    <div class="pdf-progress-fill" id="pdfExtractProgressFill" style="width: 0%;"></div>
+                  </div>
+                  <div class="pdf-progress-text" id="pdfExtractProgressText" style="font-size: 0.75rem; color: var(--cyan); margin-top: 6px; text-align: center;">PDF render ho raha hai…</div>
+                </div>
+
+                <!-- Extracted Pages Visual List -->
+                <div class="control-section">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span class="control-label" style="margin-bottom: 0;">Extracted Pages (<span id="pdfExtractedCount">0</span>)</span>
+                    <button type="button" class="aspect-btn" id="downloadAllPagesJpgBtn" style="font-size: 0.7rem; padding: 3px 8px; color: var(--cyan); display: none;">
+                      ⬇ Download All JPGs
+                    </button>
+                  </div>
+
+                  <div class="pdf-extracted-list" id="pdfExtractedPagesList">
+                    <div class="pdf-empty-state" id="pdfExtractEmptyState">
+                      <span>📄 Abhi koi PDF load nahi hai.<br>Upar button se PDF Document upload karein.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Shared Privacy Notice -->
+              <div class="tab-alert success" style="margin-top: 14px;">
+                <span aria-hidden="true">🔒</span>
+                <span>Client-Side PDF compilation &amp; extraction. Aapka dastavez internet par kisi third-party server par nahi jata.</span>
+              </div>
+            </div>
+
+            <!-- TAB 4: Touch-Up & Filters -->
+            <div class="tab-pane" id="pane-touchup" role="tabpanel" aria-labelledby="tab-touchup">
+              
+              <!-- 1-Click Signature Paper Cleaner -->
+              <div class="control-section">
+                <span class="control-label">1-Click Signature &amp; Document Fixes</span>
+                <button type="button" class="btn-primary" id="cleanSignatureBtn" style="width: 100%; justify-content: center; margin-bottom: 8px; padding: 11px 16px;">
+                  ✍ 1-Click Signature Paper Cleaner
+                </button>
+                <p class="field-sublabel" style="line-height: 1.5; margin-bottom: 12px; font-size: 0.73rem;">
+                  Mobile camera ke shadows, peelepan aur desk glare ko mita kar pure white paper par crisp dark ink banata hai.
+                </p>
+                <button type="button" class="aspect-btn" id="autoEnhanceBtn" style="width: 100%; text-align: center; padding: 8px;">
+                  ✨ Auto Enhance Photo &amp; Document
+                </button>
+              </div>
+
+              <!-- Canvas Transforms: Rotate 90° & Flip Horizontal -->
+              <div class="control-section">
+                <span class="control-label">Canvas Transforms</span>
+                <div class="input-row">
+                  <button type="button" class="btn-secondary" id="rotateTabBtn" style="justify-content: center; padding: 9px 12px; font-size: 0.84rem;">
+                    ↻ Rotate 90°
+                  </button>
+                  <button type="button" class="btn-secondary" id="flipHTabBtn" style="justify-content: center; padding: 9px 12px; font-size: 0.84rem;">
+                    ⇄ Flip Horizontal
+                  </button>
+                </div>
+              </div>
+
+              <!-- Brightness & Contrast -->
+              <div class="control-section">
+                <div class="control-label">
+                  <span>Brightness (Ujala)</span>
+                  <span class="val-tag" id="brightnessDisplay">0%</span>
+                </div>
+                <input type="range" class="custom-range" id="brightnessSlider" min="-100" max="100" value="0">
+              </div>
+
+              <div class="control-section">
+                <div class="control-label">
+                  <span>Contrast (Gadhapan)</span>
+                  <span class="val-tag" id="contrastDisplay">0%</span>
+                </div>
+                <input type="range" class="custom-range" id="contrastSlider" min="-100" max="100" value="0">
+              </div>
+
+              <div class="control-section">
+                <div class="toggle-row">
+                  <span style="font-size:0.82rem; color:var(--muted);">Black &amp; White Mode (Grayscale)</span>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="grayscaleToggle">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Aspect Ratio Crop Presets -->
+              <div class="control-section">
+                <span class="control-label">Aspect-Ratio Crop Presets</span>
+                <div class="aspect-btn-grid" id="cropPresetsGrid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                  <button type="button" class="aspect-btn active" data-ratio="free">Free (Original)</button>
+                  <button type="button" class="aspect-btn" data-ratio="3.5:4.5">Passport 3.5:4.5</button>
+                  <button type="button" class="aspect-btn" data-ratio="1:1">Square 1:1</button>
+                  <button type="button" class="aspect-btn" data-ratio="3:1">Signature 3:1</button>
+                </div>
+              </div>
+
+              <div class="control-section">
+                <button type="button" class="btn-secondary" id="resetFiltersBtn" style="width: 100%; justify-content: center;">
+                  Reset Filters &amp; Transforms
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Comprehensive Hindi / Hinglish SEO Guide & FAQ Section -->
+    <section class="studio-seo-section page-width">
+      
+      <!-- Trust & Cyber Cafe Highlights -->
+      <div class="guide-header">
+        <p class="eyebrow">BIHAR KA APNA CYBER CAFE &amp; STUDENT STUDIO</p>
+        <h2>Sarkari Form Photo, Signature &amp; RTPS PDF <span class="text-gradient">Guide</span></h2>
+        <p>BPSC, CSBC Bihar Police, SSC, PAN Card aur Bihar RTPS (Jati/Niwas/Aay) ke liye photo-document upload karne ka niyam aur asan tarika.</p>
+      </div>
+
+      <div class="trust-cards-grid">
+        <div class="trust-card">
+          <div class="trust-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          <h3>100% Client-Side Safe</h3>
+          <p>Aapki photo, signature ya confidential dastavez kisi server par upload nahi hote. Sabhi process aapke mobile ya PC ke browser me hoti hai.</p>
+        </div>
+
+        <div class="trust-card">
+          <div class="trust-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+          </div>
+          <h3>Cyber Cafe Speed</h3>
+          <p>Cyber cafe operators ke liye instant shortcut presets — PAN Card 213x213, BPSC 50KB, Signature 20KB aur RTPS 200KB PDF ek click me tayar.</p>
+        </div>
+
+        <div class="trust-card">
+          <div class="trust-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+          </div>
+          <h3>Bina Quality Khoye Compress</h3>
+          <p>Smart iterative compression algorithms se text aur signature dhundhle (blur) nahi hote aur sarkari portal par form reject hone ka khatra khatam hota hai.</p>
+        </div>
+      </div>
+
+      <!-- Specification Comparison Table for Major Bihar Exams -->
+      <div class="spec-table-card">
+        <h3>Bihar &amp; National Sarkari Exam Photo-Signature Specification Chart (2026)</h3>
+        <p class="table-sub">Niche diye gaye chart ke anusaar apne photo aur signature ka size check karein aur ek click me tayar karein:</p>
+        
+        <table class="seo-table">
+          <thead>
+            <tr>
+              <th>Exam / Portal</th>
+              <th>Photo Size &amp; Dimension</th>
+              <th>Signature Size &amp; Dimension</th>
+              <th>Zaroori Niyam (Rules)</th>
+              <th>Preset</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>BPSC (Teacher TRE / CCE)</strong></td>
+              <td>20 KB se 50 KB (3.5 × 4.5 cm / 130×170 px)</td>
+              <td>10 KB se 20 KB (Hindi &amp; English alag)</td>
+              <td>White background, dono kaan saaf dikhne chahiye.</td>
+              <td><span class="tag-badge badge-green">BPSC Photo</span></td>
+            </tr>
+            <tr>
+              <td><strong>CSBC Bihar Police Constable</strong></td>
+              <td>20 KB se 50 KB (JPG / JPEG)</td>
+              <td>10 KB se 25 KB (White paper black ink)</td>
+              <td>Photo 3 mahine se purani na ho, DOP mandatory.</td>
+              <td><span class="tag-badge badge-green">Bihar Police</span></td>
+            </tr>
+            <tr>
+              <td><strong>BSSC (Inter &amp; CGL)</strong></td>
+              <td>20 KB se 50 KB (JPG)</td>
+              <td>10 KB se 20 KB</td>
+              <td>Chashma ya topi pehankar photo na lagayein.</td>
+              <td><span class="tag-badge badge-blue">BSSC Preset</span></td>
+            </tr>
+            <tr>
+              <td><strong>PAN Card (UTIITSL / NSDL)</strong></td>
+              <td><strong>Strictly 213 × 213 px</strong> (&lt; 30 KB, 300 DPI)</td>
+              <td><strong>400 × 200 px</strong> (&lt; 20 KB)</td>
+              <td>Color passport photo, bina border.</td>
+              <td><span class="tag-badge badge-green">PAN 213x213</span></td>
+            </tr>
+            <tr>
+              <td><strong>SSC (CGL, CHSL, GD, MTS)</strong></td>
+              <td>20 KB se 50 KB (3.5 × 4.5 cm)</td>
+              <td>10 KB se 20 KB (4.0 × 2.0 cm)</td>
+              <td>Front facing, seedha camera me dekhte hue.</td>
+              <td><span class="tag-badge badge-blue">SSC Photo</span></td>
+            </tr>
+            <tr>
+              <td><strong>Bihar RTPS (Jati, Niwas, Aay)</strong></td>
+              <td>Passport Photo (&lt; 50 KB)</td>
+              <td>Document PDF (&lt; 200 KB)</td>
+              <td>Aadhaar/Ration Card PDF strictly under 200 KB.</td>
+              <td><span class="tag-badge badge-green">RTPS PDF 200KB</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Step-by-Step SEO Guides -->
+      <div class="guides-grid">
+        
+        <article class="guide-article">
+          <span class="article-badge">Guide 01</span>
+          <h3>Sarkari Form ke liye Photo &amp; Signature KB Resize kaise karein?</h3>
+          <p>BPSC, CSBC aur SSC online application bharte waqt sabse jyada pareshani photo aur signature ke file size (KB) ko lekar aati hai. Mobile camera se li gayi photo 3MB se 6MB tak hoti hai, jise form reject kar deta hai.</p>
+          <ol class="step-list">
+            <li><strong>Photo Upload Karein:</strong> 'Dropzone' par tap karke apne phone se photo ya signature chunein.</li>
+            <li><strong>Preset Select Karein:</strong> Control panel me <code>BPSC Photo</code> ya <code>CSBC</code> chip dabayein. Target size automatically 50 KB set ho jayega.</li>
+            <li><strong>Check Size:</strong> Niche preview bar me dekhein ki output size 50 KB se kam ho gaya hai.</li>
+            <li><strong>Download Karein:</strong> 'Download File' button par click karke instant JPG download karein.</li>
+          </ol>
+        </article>
+
+        <article class="guide-article">
+          <span class="article-badge">Guide 02</span>
+          <h3>UTI / NSDL PAN Card ke liye 213×213 Pixel Photo kaise banayein?</h3>
+          <p>PAN Card online form (UTIITSL aur NSDL) par regular photo upload karne par 'Invalid Dimension' ka error aata hai, kyunki wahan strict 213x213 pixels aur 300 DPI ki shart hoti hai.</p>
+          <ol class="step-list">
+            <li>Photo upload karke <strong>'KB Resizer'</strong> tab me jayein.</li>
+            <li><strong>PAN Photo (213×213)</strong> chip par click karein. Tool automatically width 213px aur height 213px lock kar deta hai.</li>
+            <li>File size automatically <strong>30 KB se kam</strong> adjust ho jayegi.</li>
+            <li>Signature ke liye <strong>'PAN Sign (400×200)'</strong> select karein.</li>
+          </ol>
+        </article>
+
+        <article class="guide-article">
+          <span class="article-badge">Guide 03</span>
+          <h3>Bihar RTPS (serviceonline.bihar.gov.in) ke liye PDF 200KB kaise banayein?</h3>
+          <p>Bihar me Jati Praman Patra (Caste), Aawasiya (Residence), Aay (Income) ya Non-Creamy Layer (NCL) certificate banwate waqt Aadhaar card aur dastavez 200 KB se kam PDF me maange jaate hain.</p>
+          <ol class="step-list">
+            <li>Apne Aadhaar card ya document ki photo Studio me upload karein.</li>
+            <li>Tab bar me <strong>'PDF 200KB'</strong> tab par click karein.</li>
+            <li><strong>'RTPS Max 200 KB'</strong> preset chunein. Yeh tool image ko bina padhne laayak text khoye perfect 195 KB PDF me convert karta hai.</li>
+            <li><strong>'Generate RTPS PDF'</strong> button dabayein aur turant PDF download karein.</li>
+          </ol>
+        </article>
+
+        <article class="guide-article">
+          <span class="article-badge">Guide 04</span>
+          <h3>Photo par Candidate ka Name aur Date (DOP) kaise likhein?</h3>
+          <p>Bihar Police (CSBC) aur SSC me yeh niyam hai ki photo par candidate ka naam aur kis din photo li gayi (Date of Photo - DOP) bottom strip par saaf likha hona chahiye.</p>
+          <ol class="step-list">
+            <li>Photo upload karke <strong>'Name &amp; Date'</strong> tab me jayein.</li>
+            <li>Apna pura naam (jaise: <code>AMIT KUMAR</code>) likhein.</li>
+            <li>Date of Photo me aaj ki ya recent tareekh darj karein (jaise: <code>DOP: 15/11/2026</code>).</li>
+            <li>Tool photo ke niche safed patti (white strip) par bold black font me details print kar dega.</li>
+          </ol>
+        </article>
+
+      </div>
+
+      <!-- FAQ Accordion Section -->
+      <div class="faq-section">
+        <h2 class="faq-title">Aksar Puche Jaane Wale Sawal (FAQ)</h2>
+        <p class="faq-subtitle">Photo resizer, signature compress aur RTPS PDF tool ke bare me zaroori sawal-jawab.</p>
+
+        <div class="faq-list">
+          
+          <details class="faq-item" open>
+            <summary class="faq-question">
+              <span>Photo resize karne par kya photo ki quality kharab ho jati hai?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Nahi! BiharFast Studio ek <em>multi-step adaptive canvas algorithm</em> ka upyog karta hai jo image ke resolution aur compression quality ko balance karta hai. Isse photo ka chehra aur signature ke baareek akshar bilkul clear rehte hain aur file size 20KB-50KB me convert ho jati hai.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Mobile phone se li gayi signature ki photo ko saaf (B&amp;W) kaise karein?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Mobile se photo kheenchne par kagaz par parchhayi (shadow) ya peela-pan aa jata hai. BiharFast Studio ke <strong>'Touch-Up'</strong> tab me jakar <strong>'Clean Signature (B&amp;W)'</strong> button par click karein. Yeh background ko ekdum safed kar dega aur signature ki siyahi (ink) ko gehra black bana dega jisse portal par signature turant accept ho sake.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Bihar RTPS portal par 'File size exceeds 200 KB' ka error kyun aata hai?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Bihar RTPS (<code>serviceonline.bihar.gov.in</code>) ka server 200 KB se badi file ko reject kar deta hai. Hamare Studio ke <strong>'PDF 200KB'</strong> tab me 'RTPS Max 200 KB' option chunein. Yeh tool document ko strictly 180 KB se 198 KB ke beech lock karta hai jisse error kabhi nahi aayega.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Kya yeh tool bilkul muft (free) hai aur isme koi watermark aayega?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Haan, BiharFast Studio 100% free hai. Isme kisi bhi tarah ka watermark, branding ya hidden charge nahi hai. Cyber cafe operators aur students jitni chahein utni photos aur documents resize kar sakte hain.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Kya photo par Date of Photo (DOP) likhna sabhi exam me anivarya hai?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Nahi, har exam me anivarya nahi hota. CSBC Bihar Police, SSC aur kuch vishesh BPSC vigyapanon me candidate ka naam aur DOP likhna mandatory hota hai. Notification padh kar agar zaroorat ho toh hamare <strong>'Name &amp; Date'</strong> tab ka upyog karein, anyatha saadharan passport photo download karein.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Kya bina internet ke bhi yeh tool kaam karta hai?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Ek baar page load ho jane ke baad image resizing aur photo touching poori tarah aapke device ke browser me hoti hai. Isliye agar internet thodi der ke liye disconnect bhi ho jaye, tab bhi aap photo resize aur download kar sakte hain.</p>
+            </div>
+          </details>
+
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Shared Site Footer -->
+  <footer class="site-footer">
+    <div class="page-width footer-grid">
+      <div class="footer-column">
+        <a class="brand footer-brand" href="../index.html" aria-label="BiharFast home">
+          <span class="brand-mark">
+            <svg data-image-fallback="brand" viewBox="0 0 32 32" aria-hidden="true"><path fill="#04221d" d="M8 6h9.1c4.4 0 7 2.2 7 5.8 0 2-1 3.5-2.8 4.3 2.6.7 4.1 2.5 4.1 5.1 0 4-2.9 6.8-7.8 6.8H8V6Zm5 4.2v4.2h4.2c1.5 0 2.3-.7 2.3-2.1s-.8-2.1-2.3-2.1H13Zm0 8.3v5.1h4.8c1.7 0 2.7-.9 2.7-2.5s-1-2.6-2.7-2.6H13Z"/></svg>
+            <img class="brand-logo-image" src="../assets/img/logo.png" alt="" data-optional-image="brand" hidden>
+          </span>
+          <span>Bihar<span class="brand-name-accent">Fast</span><small>.in</small></span>
+        </a>
+        <p class="footer-summary">Bihar ke logon ke sujhav se, Bihar ke liye ek free aur practical digital platform banane ki koshish.</p>
+        <div class="footer-socials">
+          <a href="https://wa.me/916200554191" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>
+          <a href="mailto:devanuragai@gmail.com">Email ↗</a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <h2>Quick Links</h2>
+        <nav class="footer-links" aria-label="Quick Links">
+          <a href="../index.html">Home</a>
+          <a href="studio.html">Studio Tool</a>
+          <a href="../pages/about.html">About Us</a>
+          <a href="../pages/contact.html">Contact Us</a>
+          <a href="../index.html#idea-form">Submit Idea</a>
+        </nav>
+      </div>
+      <div class="footer-column">
+        <h2>Legal &amp; Compliance</h2>
+        <nav class="footer-links" aria-label="Legal and Compliance">
+          <a href="../pages/privacy-policy.html">Privacy Policy</a>
+          <a href="../pages/disclaimer.html">Disclaimer</a>
+          <a href="../sitemap.xml">Sitemap</a>
+        </nav>
+      </div>
+    </div>
+    <div class="footer-bottom page-width">
+      <p>© 2026 BF Studio · Powered by BiharFast (biharfast.in) · <em>Built in India for the World</em></p>
+      <p class="independent-note"><strong>Independent platform</strong> · Client-side browser processing · Zero data stored.</p>
+    </div>
+  </footer>
+
+  <!-- BiharFast Studio Core (Connected to kb-engine.js) -->
+  <script type="module" src="../assets/js/studio-core.js"></script>
+
+  <!-- Service Worker Registration for 100% Offline Support -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swPath = window.location.pathname.includes('/tools/') ? '../sw.js' : './sw.js';
+        navigator.serviceWorker.register(swPath, { scope: '/' })
+          .catch(() => navigator.serviceWorker.register('/sw.js', { scope: '/' }))
+          .catch(() => navigator.serviceWorker.register(swPath))
+          .then((reg) => {
+            if (!reg) return;
+            console.log('[BiharFast Studio] Offline Service Worker registered:', reg.scope);
+            const badge = document.getElementById('headerOfflineBadge');
+            const text = document.getElementById('headerOfflineText');
+            if (badge && text) {
+              badge.classList.remove('is-offline');
+              text.textContent = 'Offline Ready';
+              badge.title = 'BiharFast Studio is 100% cached & works offline without internet';
+            }
+          })
+          .catch((err) => console.warn('[BiharFast Studio] SW registration failed:', err));
+      });
+
+      // Live online/offline status detection
+      const updateOnlineStatus = () => {
+        const badge = document.getElementById('headerOfflineBadge');
+        const text = document.getElementById('headerOfflineText');
+        const heroBadge = document.getElementById('statusBadgeOfflineText');
+        if (!navigator.onLine) {
+          if (badge) badge.classList.add('is-offline');
+          if (text) text.textContent = 'Working Offline';
+          if (heroBadge) heroBadge.textContent = 'Working Offline (No Internet)';
+        } else {
+          if (badge) badge.classList.remove('is-offline');
+          if (text) text.textContent = 'Offline Ready';
+          if (heroBadge) heroBadge.textContent = '100% Offline - No Upload';
+        }
+      };
+
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+    }
+  </script>
+</body>
+</html>
